@@ -15,22 +15,30 @@ import pandas as pd
 
 
 
-def read_df():
+def read_df(x):
     '''
     '''
 
-    init_dict = {"groups": "group_4", "binsize": 5000}
+    init_dict = {"groups": "group_"+str(x), "binsize": 5000}
     df = data_processing(init_dict)
+    
+       #check for duplications
+    check=sum(df.index.duplicated(keep='first'))
+    if check == 0:
+        check="Fine"
+    else:
+        check="Error"
+    
+    
+    
     #for i in range(2,9):
         #init_dict = {"groups": "group_"+str(i), "binsize": 50000}
         #temp_df= data_processing(init_dict)
         #df= pd.concat([df,temp_df])
         
-        
-   #sum(df.index.duplicated(keep='first')) check for duplications
-   
-    return df
 
+   
+    return df, check
 
 
 
