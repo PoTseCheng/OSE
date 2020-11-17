@@ -26,15 +26,58 @@ from ruspy.estimation.estimation_transitions import create_transition_matrix
 
 ####Model#####
 
+parlist = [
+    ('Tr',int32),
+    ('age_min',int32),
+    ('age_max',int32), 
+    ('beta',double), 
+    ('rho',double),
+    ('gamma0',double),
+    ('gamma1',double),
+    ('G',double[:]),
+    ('v',double[:]),
+    ('r',double),
+    ('R',double),
+    ('credit',double),
+    ('sigma_trans',double), 
+    ('Ntrans',int32),
+    ('sigma_perm',double), 
+    ('Nperm',int32),
+    ('p',double), 
+    ('mu',double), 
+    ('Na',int32),
+    ('grid_a',double[:]), 
+    ('grid_m',double[:]),  
+    ('grid_age',double[:]),        
+    ('a_max',double),    
+    ('Nshocks',int32),        
+    ('trans',double[:]),
+    ('trans_w',double[:]),     
+    ('perm',double[:]),
+    ('perm_w',double[:])
+]
+
+sollist = [
+
+
+
+
+
+
+
+    
+]
+
+
 #to do:finish up model construction
 
+@njit
 class rust1987():
     
         def __init__(self,sol_gp=False,**kwargs): # called when created
-        
-        
-        
-        
+
+
+            pass
         
         
         
