@@ -1,9 +1,9 @@
 # Generated with SMOP  0.41
-from libsmop import *
+import smop
 # .\dea.m
 
     
-@function
+
 def dea(X=None,Y=None,varargin=None,*args,**kwargs):
     varargin = dea.varargin
     nargin = dea.nargin
@@ -50,9 +50,9 @@ def dea(X=None,Y=None,varargin=None,*args,**kwargs):
     
     # Get number of DMUs (n), inputs (m) and outputs (s)
     n,m=size(X,nargout=2)
-# .\dea.m:44
+
     s=size(Y,2)
-# .\dea.m:45
+
     
     options=getDEAoptions(n,varargin[arange()])
 # .\dea.m:48
