@@ -2,7 +2,7 @@ import numpy as np
 import math
 from numpy.linalg import cholesky
 
-#This is the python equivalient of GH_Quadrature by ohashfoashf
+#This is the python implementation equivalent of GH_Quadrature by Lilia Maliar and Serguei Maliar, this version is constructed by Viktor Cheng which included multiple optimisations under the python framework.
 
 def GH_Quadrature(N,vcv,Qn=10):
     ''''''
