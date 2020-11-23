@@ -51,4 +51,5 @@ def GH_Quadrature(N,vcv,Qn=10):
 
     return n_nodes,epsi_nodes,weight_nodes
 
+# will merge to auxiliary after all other matlab files are translated to python
 
