@@ -30,4 +30,16 @@ def converter():
             
     
 
+def converter_test():
+    '''
+    convert .mat to csv files
+    '''
+    dirname = os.getcwd()
+    dirname = dirname + "/data/"
+    data = scipy.io.loadmat(dirname+"test for trial 3_2.mat")
+    
+    for i in data:
+        if '__' not in i and 'readme' not in i: 
+            np.savetxt("test for trial 3_2.csv", data[i], delimiter=',')
 
+    return
