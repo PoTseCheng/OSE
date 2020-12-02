@@ -3,43 +3,43 @@ import numpy as np
 import os
 
 
-def converter():
-    '''
-    convert .mat to csv files
-    '''
-    dirname = os.getcwd()
-    dirname = dirname + "/data/"
-    data = scipy.io.loadmat(dirname+"epsi_test.mat")
-    for i in data:
-        if '__' not in i and 'readme' not in i: 
-            np.savetxt("epsi_test.csv", data[i], delimiter=',')
-    data = scipy.io.loadmat(dirname+"epsi10000.mat")
+#def converter():
+    #'''
+    #convert .mat to csv files
+    #'''
+    #dirname = os.getcwd()
+    #dirname = dirname + "/data/"
+    #data = scipy.io.loadmat(dirname+"epsi_test.mat")
+    #for i in data:
+        #if '__' not in i and 'readme' not in i: 
+            #np.savetxt("epsi_test.csv", data[i], delimiter=',')
+    #data = scipy.io.loadmat(dirname+"epsi10000.mat")
     
-    for i in data:
-        if '__' not in i and 'readme' not in i: 
-            np.savetxt("epsi10000.csv", data[i], delimiter=',')
+    #for i in data:
+        #if '__' not in i and 'readme' not in i: 
+            #np.savetxt("epsi10000.csv", data[i], delimiter=',')
     
-    data = scipy.io.loadmat(dirname+"test for trial 3")
+    #data = scipy.io.loadmat(dirname+"test for trial 3")
     
-    for i in data:
-        if '__' not in i and 'readme' not in i: 
-            np.savetxt("test for trial 3.csv", data[i], delimiter=',')
+    #for i in data:
+        #if '__' not in i and 'readme' not in i: 
+            #np.savetxt("test for trial 3.csv", data[i], delimiter=',')
 
-    return
+    #return
 
             
     
 
-def converter_test():
+def converter_new(x):
     '''
     convert .mat to csv files
     '''
     dirname = os.getcwd()
     dirname = dirname + "/data/"
-    data = scipy.io.loadmat(dirname+"test for trial 3_2.mat")
+    data = scipy.io.loadmat(dirname+x)
     
     for i in data:
         if '__' not in i and 'readme' not in i: 
-            np.savetxt("test for trial 3_2.csv", data[i], delimiter=',')
+            np.savetxt( x + ".csv", data[i], delimiter=',')
 
     return
