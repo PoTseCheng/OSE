@@ -87,7 +87,8 @@ def Num_Stab_Approx(x,y,RM,penalty,normalised):
                     Y1)
 
         # normalised the output
-        B2 = np.multiply((1/np.asarray([np.std(x[:,i], ddof=1) for i in range(1,n)])).reshape((2,1))*np.std(y, ddof=1),B)
+        Btemp = (1/np.asarray([np.std(x[:,i], ddof=1) for i in range(1,n)]))
+        B2 = np.multiply(Btemp.reshape((Btemp.shape[0],1))*np.std(y, ddof=1), B)
         B1 = (y.mean()- np.matmul(np.asarray([x[:,i].mean() for i in range(1,n)]),B2)).reshape(1,1)
         B = np.concatenate((B1,B2))
         return B
