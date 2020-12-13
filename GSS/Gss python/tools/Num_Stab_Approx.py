@@ -87,8 +87,7 @@ def Num_Stab_Approx(x,y,RM,penalty,normalised):
                     Y1)
 
         # normalised the output
-        Btemp = (1/np.asarray([np.std(x[:,i], ddof=1) for i in range(1,n)]))
-        B2 = np.multiply(Btemp.reshape((Btemp.shape[0],1))*np.std(y, ddof=1), B)
+        B2 = np.multiply((1/np.asarray([np.std(x[:,i], ddof=1) for i in range(1,n)])).reshape((n1,1))*np.std(y, ddof=1),B)
         B1 = (y.mean()- np.matmul(np.asarray([x[:,i].mean() for i in range(1,n)]),B2)).reshape(1,1)
         B = np.concatenate((B1,B2))
         return B
@@ -105,7 +104,7 @@ def Num_Stab_Approx(x,y,RM,penalty,normalised):
                 inv(np.matmul(X1.transpose(),X1).astype(float)), #need to convert the output to float or else return error
                 np.matmul(X1.transpose(),Y1)
                 )
-            return B
+        
         
         #LS-SVD
         elif RM == 2:
@@ -113,7 +112,7 @@ def Num_Stab_Approx(x,y,RM,penalty,normalised):
             V = Vh.T
             S_inv = np.diag(1/S)
             B = np.matmul(np.matmul(np.matmul(V,S_inv),U.transpose()),Y1)
-            return B
+       
         
         elif RM == 3:
             # #This method is strongly discouraged! It is one of the slowest among all other regression
@@ -130,7 +129,7 @@ def Num_Stab_Approx(x,y,RM,penalty,normalised):
                 result = linprog(f, A_eq = Aeq, b_eq = beq, bounds= BND)
                 B.append(result.x) 
             #Or so it should. Unfortunately, the Scipy package will took ages to even finish computing one optimisation solution given the size of Aeq and beq. Without other choices, I import the function that does this part of computation from matlab, which is able to finish the computation within seconds.
-            return B
+      
         
         elif RM == 4:
             # Also extremely slow
@@ -144,6 +143,6 @@ def Num_Stab_Approx(x,y,RM,penalty,normalised):
                 f = -Y1[:,i]
                 result = linprog(f, A_eq = Aeq, b_eq = beq, bounds= BND)
                 B.append(result.x)
-            return B
+        return B
                 
     

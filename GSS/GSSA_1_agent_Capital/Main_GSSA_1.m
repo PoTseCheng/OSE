@@ -146,7 +146,7 @@ while dif_GSSA_1d > 1e-4*kdamp    % 1e-4*kdamp is a convergence parameter,
     bk_hat_1d = inv(x(1:T-1,:)'*x(1:T-1,:))*x(1:T-1,:)'*y(1:T-1,:);
                                  % Compute new coefficients of the capital 
                                  % policy function using the OLS
-    bk_1d = kdamp*bk_hat_1d +(1-kdamp)*bk_1d;  
+    bk_1d = kdamp*bk_hat_1d + (1-kdamp)*bk_1d;  
                                  % Update the coefficients of the capital  
                                  % policy function using damping
                                      
