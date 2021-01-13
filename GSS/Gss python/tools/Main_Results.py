@@ -6,6 +6,7 @@ from tools.Num_Stab_Approx import*
 
 
 
+
 def GSSA_main_cycle(T, gam, alpha, beta, delta, kdamp, dif_GSSA_1d, a, bk_1d, k_old, k, checker = 0):
     '''
     Compute a first-degree polynomial solution using the one-node Monte Carlo integration method.
@@ -27,6 +28,7 @@ def GSSA_main_cycle(T, gam, alpha, beta, delta, kdamp, dif_GSSA_1d, a, bk_1d, k_
             Returns:
                     numpy array: A numpy array of floats with the shape of (9999,)
     '''
+    
     while dif_GSSA_1d > 1e-4*kdamp:
         x=[]
         for i in range(0,T):
@@ -41,6 +43,7 @@ def GSSA_main_cycle(T, gam, alpha, beta, delta, kdamp, dif_GSSA_1d, a, bk_1d, k_
         bk_hat_1d= np.matmul(inv(np.matmul(np.transpose(x[0:T-1,:]),x[0:T-1,:])),np.matmul(np.transpose(x[0:T-1,:]),y[0:T-1]))
         bk_1d = (kdamp*bk_hat_1d+ (1-kdamp)*bk_1d.reshape(1,3)).reshape(3,1)
         k_old=np.copy(k)
+
     return y
 
 
@@ -102,6 +105,7 @@ def GSSA_poly(T, a, z, d, PF, zb, RM, penalty, normalize, dif_GSSA_D, kdamp, alp
         bk_hat_D = Num_Stab_Approx(X[0:T-1,:],y[0:T-1,:],RM,penalty,normalize)
         bk_D = (kdamp*bk_hat_D+ (1-kdamp)*bk_D)
         k_old=np.copy(k)
+
     return bk_D
 
 
