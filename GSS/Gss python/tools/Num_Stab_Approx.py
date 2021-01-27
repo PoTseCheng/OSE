@@ -94,7 +94,7 @@ def Num_Stab_Approx(x,y,RM,penalty,normalised):
         
     else:
         X1 = x
-        Y1 = Y          # Leave Y without changes
+        Y1 = y          # Leave Y without changes
         n1 = n
         # Regression methods
         
