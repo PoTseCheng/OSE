@@ -3,6 +3,7 @@ from numpy.linalg import inv
 from numpy.linalg import svd
 from scipy.optimize import linprog
 
+#need rewriting### this function is so messy
 
 def Num_Stab_Approx(x,y,RM,penalty,normalised):
     '''
@@ -38,18 +39,18 @@ def Num_Stab_Approx(x,y,RM,penalty,normalised):
             S_inv = np.diag(1/S)
             B = np.matmul(np.matmul(np.matmul(V,S_inv),U.transpose()),Y1) 
         elif RM == 3:
-            # This method is strongly discouraged! It is one of the slowest among all other regression construct the boundaries
-            BND = [(-100, 100)]*n1 + [(0, float("inf"))]*2*T
-            f = [0]*n1+ [1]*2*T
+            BND = [(-100, 100)]*n1 + [(0, None)]*2*T
+            #, bounds= BND
+            f = np.asarray([0]*n1+ [1]*2*T)
             #specify the Aeq an beq
-            Aeq = np.concatenate((X1, np.identity(T), -np.identity(T)), axis=1)
+            Aeq = np.concatenate((X1, np.eye(T), -np.eye(T)), axis=1)
             B =[]
             #solve the equation
-            for j in range(N):
-                beq = Y1[:,j].tolist()
-                result = linprog(f, A_eq = Aeq, b_eq = beq, bounds= BND , method='revised simplex')
-                B.append(result.x) 
-                # Or so it should. Unfortunately, the Scipy package will took ages to even finish computing one optimisation solution given the size of Aeq and beq. Without other choices, I import the function that does this part of computation from matlab, which is able to finish the computation within seconds.
+            for i in range(N):
+                beq = Y1[:,i]
+                result = linprog(f, A_eq = Aeq, b_eq = beq, bounds= BND, method="highs-ipm")
+                B.append(list(result.x[0:n1]))
+                B = np.asarray(B).reshape(n1,1)
         
         elif RM == 4:
             # Also extremely slow
@@ -114,21 +115,18 @@ def Num_Stab_Approx(x,y,RM,penalty,normalised):
        
         
         elif RM == 3:
-            # #This method is strongly discouraged! It is one of the slowest among all other regression
-            # construct the boundaries
-            BND = [(-100, 100)]*n1 + [(0, float("inf"))]*2*T
-            f = [0]*n1+ [1]*2*T
-            # specify the Aeq an beq
-            Aeq = np.concatenate((X1, np.identity(T), -np.identity(T)), axis=1)
+            BND = [(-100, 100)]*n1 + [(0, None)]*2*T
+            #, bounds= BND
+            f = np.asarray([0]*n1+ [1]*2*T)
+            #specify the Aeq an beq
+            Aeq = np.concatenate((X1, np.eye(T), -np.eye(T)), axis=1)
             B =[]
             #solve the equation
-            
-            for j in range(N):
-                beq = Y1[:,j].tolist()
-                result = linprog(f, A_eq = Aeq, b_eq = beq, bounds= BND)
-                B.append(result.x) 
-            #Or so it should. Unfortunately, the Scipy package will took ages to even finish computing one optimisation solution given the size of Aeq and beq. Without other choices, I import the function that does this part of computation from matlab, which is able to finish the computation within seconds.
-      
+            for i in range(N):
+                beq = Y1[:,i]
+                result = linprog(f, A_eq = Aeq, b_eq = beq, bounds= BND, method="highs-ipm")
+                B.append(list(result.x[0:n1]))
+                B = np.asarray(B).reshape(n1,1)
         
         elif RM == 4:
             # Also extremely slow
