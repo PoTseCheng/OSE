@@ -4,7 +4,7 @@ from numpy.linalg import inv
 from numpy.linalg import svd
 from scipy.optimize import linprog
 
-def Num_Stab_Approx(X,Y,RM,penalty,normalised):
+def Num_Stab_Approx(x,y,RM,penalty,normalised):
     '''
 
     '''
@@ -107,7 +107,7 @@ def Num_Stab_Approx(X,Y,RM,penalty,normalised):
 
     #RM == 8 is unavaliable(see notebook)
     if normalised == 1 or RM >= 5:
-        B2 = np.multiply((1/np.asarray([np.std(x[:,i], ddof=1) for i in range(1,n)])).reshape((2,1))*np.std(y, ddof=1),B)
+        B2 = np.multiply((1/np.asarray([np.std(x[:,i], ddof=1) for i in range(1,n)])).reshape((n1,1))*np.std(y, ddof=1),B)
         B1 = (y.mean()- np.matmul(np.asarray([x[:,i].mean() for i in range(1,n)]),B2)).reshape(1,1)
         B = np.concatenate((B1,B2))
     else:
