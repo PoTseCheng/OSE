@@ -232,5 +232,17 @@ def GSSA_MainResult(D_Max=5, Rm=6, Norml=1, Pt=7, Pf=0 ):
         result_max.append(max_error)
         result_mean.append(mean_error)
         result_time.append(error_time)
+
+    #construct df
+    showcase_result = pd.DataFrame(result_max, columns=["Maximum Error"])
+    showcase_result["Mean Error"] = result_mean
+    showcase_result["Time"] = Time
+    showcase_result["Error Time"] = result_time
+    showcase_result["Polynomial Degree"]= list(range(1,D_max+1))
+    showcase_result["Total Time"] = showcase_result["Error Time"] + showcase_result["Time"]
+    showcase_result["Rounded Total Time"]=showcase_result["Total Time"].round(decimals=2)
+    showcase_result["Original Mean Error"]= 10**(showcase_result["Mean Error"])
+    showcase_result["Original Max Error"]= 10**(showcase_result["Maximum Error"])
+    showcase_result.set_index(["Polynomial Degree"])
     
-    return Time, result_mean, result_max, result_time
+    return showcase_result
