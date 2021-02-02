@@ -8,17 +8,16 @@ from scipy import linalg
 #Borrow function from others to ensure same results of function Randn
 def randn2(*args,**kwargs):
     '''
-    Calls rand and applies inverse transform sampling to the output.
+    Calls rand and applies inverse transform sampling to the output. Borrowed from Jonas Rauber.
     '''
     uniform = rand(*args, **kwargs)
     return sqrt(2) * erfinv(2 * uniform - 1)
     # Copyright (c) 2015 Jonas Rauber
-    # License: The MIT License (MIT)
-    # See: https://github.com/jonasrauber/randn-matlab-python
 
 def Productivity(T, N, a_init, sigma, rho):
     '''
     This function simulates draws of random series of the productivity shocks and the corresponding series of the productivity levels.
+    ----------
     Arguments:
     T(int): Simulation length, needs to be at least 1
     N(int): Number of countries, notice N needs to be at least 1.
@@ -26,6 +25,7 @@ def Productivity(T, N, a_init, sigma, rho):
     sigma(float): Parameters of the model in Kenneth L. Judd et.al (2011).
     rho(float): Parameters of the model in Kenneth L. Judd et.al (2011).
 
+    ----------
     Output:
     a(2D numpy array): Time series of the productivity levels of N countries.
     
@@ -48,10 +48,12 @@ def Productivity(T, N, a_init, sigma, rho):
 def Ord_Polynomial_N(z, D):
     '''
     Summary
+    ----------
     Arguments:
     z(2D numpy array): Data points on which the polynomial basis functions must be constructed.
     D(int): 1 to 5 the degree of the polynomial whose basis functions must be constructed.
 
+    ----------
     Output:
     basis_fs(2D numpy array): Matrix with complete degrees of polynominal.
     
@@ -99,12 +101,14 @@ def Ord_Polynomial_N(z, D):
 
 def GH_Quadrature(Qn, N, vcv):
     '''
-    This function constructs integration nodes and weights under Gauss-Hermite quadrature (product) integration rule with Qn<=10 nodes in each of N dimensions
+    This function constructs integration nodes and weights under Gauss-Hermite quadrature (product) integration rule with Qn<=10 nodes in each of N dimensions.
+    ----------
     Arguments:
     Qn(int): The number of nodes in each dimension, notice that Qn must be between 1 to 10.
     N(int): The number of countries.
     vcv(2D numpy array): The predefined covariance matrix.
 
+    ----------
     Outputs:
     n_nodes(int):Total number of integration nodes.
     epsi_nodes(2D numpy array):Integration nodes.
@@ -147,9 +151,11 @@ def GH_Quadrature(Qn, N, vcv):
         eps = [3.436159118837738, 2.532731674232790, 1.756683649299882, 1.036610829789514, 0.3429013272237046, -0.3429013272237046, -1.036610829789514, -1.756683649299882, -2.532731674232790, -3.436159118837738]
         weight = [7.640432855232621e-06, 0.001343645746781233, 0.03387439445548106, 0.2401386110823147, 0.6108626337353258, 0.6108626337353258, 0.2401386110823147, 0.03387439445548106, 0.001343645746781233, 7.640432855232621e-06]
     #N-dimensional integration nodes and weights for N uncorrelated normally distributed random variables with zero mean and unit variance
+    
+    #Total number of integration nodes
     n_nodes = Qn**N
     
-    #Here is my personal spin-off of the original matlab code
+    #A better approch for 2D array construction
     z1 = np.ones([n_nodes,N]).astype(float)
     w1i = np.ones([n_nodes,N]).astype(float)
     w1 = np.ones([n_nodes,1]).astype(float)
@@ -168,5 +174,111 @@ def GH_Quadrature(Qn, N, vcv):
     #Final integration nodes
     epsi_nodes = z@sqrt_vcv
 
+    return n_nodes, epsi_nodes, weight_nodes
+
+def Monomials_1(N, vcv):
+    '''
+    This function constructs integration nodes and weights under N-dimensional monomial (non-product) integration rule with 2N nodes.
+    ----------
+    Arguments:
+    N(int): Number of countries.
+    vcv(2D numpy array): The predefined covariance matrix.
+    
+    ----------
+    Outputs:
+    n_nodes(int): Total number of integration nodes.
+    epsi_nodes(2D numpy array): Integration nodes.
+    weight_nodes(2D numpy array): Integration weights.
+    
+    '''
+
+    #Total number of integration nodes
+    n_nodes = 2*N
+
+    #Step 1. N-dimensional integration nodes for N uncorrelated random variables with zero mean and unit variance
+    ####################################################################################################
+
+    #construct container for values
+    z1 = np.zeros((n_nodes, N))
+
+    #In each node, random variable i takes value either 1 or -1, and all other variables take value 0
+    for i in range(1, N+1):
+        z1[2*(i-1):2*i,i-1]= np.array([1,-1])
+
+    #Step 2. N-dimensional integration nodes and weights for N correlated random variables with zero mean and variance-covaraince matrix vcv
+    #####################################################################################################
+
+    #Preparations
+    sqrt_vcv = linalg.cholesky(vcv)
+    R = math.sqrt(N)*sqrt_vcv
+
+    #Integration nodes
+    epsi_nodes = z1@R
+    
+    #Integration weights
+    weight_nodes = np.ones((n_nodes,1))/n_nodes
+
+    return n_nodes, epsi_nodes, weight_nodes
+
+
+def Monomials_2(N, vcv):
+    '''
+    This function constructs integration nodes and weights under N-dimensional monomial (non-product) integration rule with 2N^2+1 nodes.
+    ----------
+    Arguments:
+    N(int): Number of countries.
+    vcv(2D numpy array): The predefined covariance matrix.
+
+    ----------
+    Outputs:
+    n_nodes(int): Total number of integration nodes.
+    epsi_nodes(2D numpy array): Integration nodes.
+    weight_nodes(2D numpy array): Integration weights.
+    '''
+    #Total number of integration nodes
+    n_nodes = 2*N**2+1
+
+    #Step 1: N-dimensional integration nodes for N uncorrelated random variables with zero mean and unit variance
+    ####################################################################################################
+
+    #Point origin(0 dimension)
+    z0 = np.zeros((1,N))
+
+    #Deviations in one dimension
+    #In each node, random variable i takes value either 1 or -1, and all other variables take value 0
+    z1 = np.zeros((2*N,N))
+    for i in range(1, N+1):
+        z1[2*(i-1):2*i,i-1]= np.array([1,-1])
+    
+    #Deviations in 2nd dimension
+    #In each node, a pair of random variables (p,q) takes either values (1,1) or (1,-1) or (-1,1) or (-1,-1), and all other variables take value 0
+
+    z2 = np.zeros((2*N*(N-1),N))
+    i = 0
+    for p in range(1, N):
+        for q in range(p+1, N+1):
+            i +=1
+            z2[4*(i-1):4*i,p-1] = np.array([1, -1, 1, -1])
+            z2[4*(i-1):4*i,q-1] = np.array([1, 1, -1, -1])
+
+    # Step2: N-dimensional integration nodes and weights for N correlated random variables with zero mean and variance-covaraince matrix vcv
+    ########################################################################################################################################
+
+    #Preparations
+    sqrt_vcv = linalg.cholesky(vcv)
+    R = math.sqrt(N+2)*sqrt_vcv
+    S = math.sqrt((N+2)/2)*sqrt_vcv
+
+    #Integration nodes
+    epsi_nodes = np.vstack((z0, z1@R, z2@S))
+
+    #Integration weights
+    #See condition in (B.8) in the Supplement of Judd et al. (2011) 
+    weight_nodes = np.vstack((
+                        2/(N+2)*np.ones((z0.shape[0], 1)),
+                        (4-N)/2/(N+2)**2*np.ones((z1.shape[0], 1)),
+                        1/(N+2)**2*np.ones((z2.shape[0], 1))
+                    ))
+    
     return n_nodes, epsi_nodes, weight_nodes
 
