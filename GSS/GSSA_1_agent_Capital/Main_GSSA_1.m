@@ -206,12 +206,12 @@ a1 = a(1:T,:).^rho*exp(epsi_nodes');
                  
 % 14. Choose a regression specification 
 % ------------------------------------ 
-RM    = 7;       % Choose a regression method: 
+RM    = 6;       % Choose a regression method: 
                  % 1=OLS,          2=LS-SVD,   3=LAD-PP,  4=LAD-DP, 
                  % 5=RLS-Tikhonov, 6=RLS-TSVD, 7=RLAD-PP, 8=RLAD-DP
 normalize = 1;   % Option of normalizing the data; 0=unnormalized data; 
                  % 1=normalized data                    
-penalty = -7;     % Degree of regularization for a regularization methods, 
+penalty = 7;     % Degree of regularization for a regularization methods, 
                  % RM=5,6,7,8 (must be negative, e.g., -7 for RM=5,7,8 
                  % and must be positive, e.g., 7, for RM=6)
 PF = 0;          % Choose a polynomial family; 0=Ordinary (default);  

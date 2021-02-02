@@ -6,14 +6,14 @@ import math
 from scipy import linalg
 from scipy.optimize import linprog
 
-#Borrow function from others to ensure same results of function Randn
+
 def randn2(*args,**kwargs):
     '''
-    Calls rand and applies inverse transform sampling to the output. Borrowed from Jonas Rauber.
+    Calls rand and applies inverse transform sampling to the output.
     '''
     uniform = rand(*args, **kwargs)
     return sqrt(2) * erfinv(2 * uniform - 1)
-    # Copyright (c) 2015 Jonas Rauber
+ 
 
 def Productivity(T, N, a_init, sigma, rho):
     '''
@@ -362,7 +362,7 @@ def Num_Stab_Approx(X, Y, RM, penalty, normalize):
         V = Vh.T
         r = np.count_nonzero(np.divide(np.diag(S).max(), np.diag(S))<= 10**(penalty))
         Sr_inv = np.zeros((n1,n1))
-        Sr_inv[0:r, 0:r]= np.diag(np.divide(1., S))
+        Sr_inv[0:r, 0:r]= np.diag(np.divide(1., S[:r]))
         B = V@Sr_inv@U.conj().T@Y1
 
     # RLAD-PP

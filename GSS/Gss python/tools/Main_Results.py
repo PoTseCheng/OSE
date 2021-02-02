@@ -12,7 +12,7 @@ import time
 
 def GSSA_main_cycle(T, gam, alpha, beta, delta, kdamp, dif_GSSA_1d, a, bk_1d, k_old, k, checker = 0):
     '''
-    Compute a first-degree polynomial solution using the one-node Monte Carlo integration method.
+    Stage 1 of GSSA
 
             Parameters:
                     T (int): A decimal integer
@@ -53,7 +53,7 @@ def GSSA_main_cycle(T, gam, alpha, beta, delta, kdamp, dif_GSSA_1d, a, bk_1d, k_
 
 def GSSA_poly(T, a, z, d, PF, zb, RM, penalty, normalize, dif_GSSA_D, kdamp, alpha, beta, delta, k, gam, y, k_old, a1, IM, n_nodes, weight_nodes, checker = 0):
     '''
-    Compute the polynomial solution.
+    Stage 2 of GSSA in Judd et. al (2011) including accuracy test.
 
             Parameters:
                     T:

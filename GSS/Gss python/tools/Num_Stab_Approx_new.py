@@ -111,11 +111,11 @@ def Num_Stab_Approx(x,y,RM,penalty,normalised):
 
     # RLS-TSVD
     elif RM == 6:
-        U, S, Vh = linalg.svd(X1, full_matrices=False)
+        U, S, Vh = svd(X1, full_matrices=False)
         V = Vh.T
         r = np.count_nonzero(np.divide(np.diag(S).max(), np.diag(S))<= 10**(penalty))
         Sr_inv = np.zeros((n1,n1))
-        Sr_inv[0:r, 0:r]= np.diag(np.divide(1., S))
+        Sr_inv[0:r, 0:r]= np.diag(np.divide(1., S[:r]))
         B = V@Sr_inv@U.conj().T@Y1
 
     #LADPP
