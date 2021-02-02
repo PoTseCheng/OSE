@@ -4,6 +4,7 @@ from scipy.special import erfinv
 import numpy as np
 import math
 from scipy import linalg
+from scipy.optimize import linprog
 
 #Borrow function from others to ensure same results of function Randn
 def randn2(*args,**kwargs):
@@ -16,7 +17,8 @@ def randn2(*args,**kwargs):
 
 def Productivity(T, N, a_init, sigma, rho):
     '''
-    This function simulates draws of random series of the productivity shocks and the corresponding series of the productivity levels.
+    This function simulates draws of random series of the productivity shocks 
+    and the corresponding series of the productivity levels.
     ----------
     Arguments:
     T(int): Simulation length, needs to be at least 1
@@ -65,37 +67,41 @@ def Ord_Polynomial_N(z, D):
     
     #2nd-degree polynomial:
     if D == 2:
-        for i in range(n_rows):
-            tempt = (z[i][:,np.newaxis]@z[i][np.newaxis,:])[np.tril_indices(dimen)]
-            basis_fs= np.hstack((basis_fs[i], tempt))[np.newaxis,]
+        for i in range(1, dimen+1):
+            for j in range(i, dimen+1):
+                basis_fs = np.hstack((basis_fs, (z[:,i-1]*z[:,j-1]).reshape(n_rows,1)))
+        #for i in range(n_rows):
+            #basis_fs= np.hstack((basis_fs[i],
+            #(z[i][:,np.newaxis]@z[i][np.newaxis,:])[np.tril_indices(dimen)]
+                                #))[np.newaxis,]
 
     #3rd-degree polynomial:
     elif D == 3:
         for i in range(1, dimen+1):
             for j in range(i, dimen+1):
-                basis_fs = np.hstack((basis_fs, z[:,i-1]*z[:,j-1][np.newaxis,]))
+                basis_fs = np.hstack((basis_fs, (z[:,i-1]*z[:,j-1]).reshape(n_rows,1)))
                 for k in range(j, dimen+1):
-                    basis_fs = np.hstack((basis_fs, z[:,i-1]*z[:,j-1]*z[:,k-1][np.newaxis,]))
+                    basis_fs = np.hstack((basis_fs, (z[:,i-1]*z[:,j-1]*z[:,k-1]).reshape(n_rows,1)))
     #4th-degree polynominal:
     elif D == 4:
         for i in range(1, dimen+1):
             for j in range(i, dimen+1):
-                basis_fs = np.hstack((basis_fs, z[:,i-1]*z[:,j-1][np.newaxis,]))
+                basis_fs = np.hstack((basis_fs, (z[:,i-1]*z[:,j-1]).reshape(n_rows,1)))
                 for k in range(j, dimen+1):
-                    basis_fs = np.hstack((basis_fs, z[:,i-1]*z[:,j-1]*z[:,k-1][np.newaxis,]))
+                    basis_fs = np.hstack((basis_fs, (z[:,i-1]*z[:,j-1]*z[:,k-1]).reshape(n_rows,1)))
                     for l in range(k, dimen+1):
-                        basis_fs = np.hstack((basis_fs, z[:,i-1]*z[:,j-1]*z[:,k-1]*z[:,l-1][np.newaxis,]))
+                        basis_fs = np.hstack((basis_fs, (z[:,i-1]*z[:,j-1]*z[:,k-1]*z[:,l-1]).reshape(n_rows,1)))
     #5th-degree polynominal:
     elif D == 5:
         for i in range(1, dimen+1):
             for j in range(i, dimen+1):
-                basis_fs = np.hstack((basis_fs, z[:,i-1]*z[:,j-1][np.newaxis,]))
+                basis_fs = np.hstack((basis_fs, (z[:,i-1]*z[:,j-1]).reshape(n_rows,1)))
                 for k in range(j, dimen+1):
-                    basis_fs = np.hstack((basis_fs, z[:,i-1]*z[:,j-1]*z[:,k-1][np.newaxis,]))
+                    basis_fs = np.hstack((basis_fs, (z[:,i-1]*z[:,j-1]*z[:,k-1]).reshape(n_rows,1)))
                     for l in range(k, dimen+1):
-                        basis_fs = np.hstack((basis_fs, z[:,i-1]*z[:,j-1]*z[:,k-1]*z[:,l-1][np.newaxis,]))
+                        basis_fs = np.hstack((basis_fs, (z[:,i-1]*z[:,j-1]*z[:,k-1]*z[:,l-1]).reshape(n_rows,1)))
                         for m in range(l, dimen+1):
-                            basis_fs = np.hstack((basis_fs, z[:,i-1]*z[:,j-1]*z[:,k-1]*z[:,l-1]*z[:,m-1][np.newaxis,]))
+                            basis_fs = np.hstack((basis_fs, (z[:,i-1]*z[:,j-1]*z[:,k-1]*z[:,l-1]*z[:,m-1]).reshape(n_rows,1)))
 
     return basis_fs
 
@@ -282,3 +288,102 @@ def Monomials_2(N, vcv):
     
     return n_nodes, epsi_nodes, weight_nodes
 
+def Num_Stab_Approx(X, Y, RM, penalty, normalize):
+    '''
+    This function implements the approximation methods mentioned in Judd et al. (2011)
+    --------
+    Arguments:
+    X(2D numpy array): Matrix of dependent variables in a regression.
+    Y(2D numpy array):Matrix of independent variables.
+    RM(int): Regression (approximation) method, from 1 to 6. RLAD-DP & LAD-DP are not included,
+    see notebook for reasoning.
+    penalty(int): Regularisation parameter for a regularisation methods.
+    normalize(int): Optional parameter to normalise the data or not. 1 or 0.
+
+    ---------
+    Outputs:
+    B(2D numpy array): Matrix of the regression coefficients.
+
+    '''
+    
+    # Step 1: Compute the dimensionality of the data
+    ################################################
+
+    T, n = X.shape
+    N  = Y.shape[1]
+    
+    # Step 2: Normalize the data(or not)
+    ####################################
+
+    if ((normalize==1) or (RM>=5)):
+        X1 = (X[:,1:n]-np.ones((T,1))@X[:,1:n].mean(axis=0)[np.newaxis,])/(np.ones((T,1))@np.std(X[:,1:n], axis=0, ddof=1)[np.newaxis,])
+        Y1 = (Y - np.ones((T,1))@Y.mean(axis=0)[np.newaxis,])/(np.ones((T,1))@np.std(Y, axis=0, ddof= 1)[np.newaxis,])
+        n1 = n-1
+    
+    else:#leave the values unchange if not normalised
+        X1 = X
+        Y1 = Y
+        n1 = n
+
+    # Step 3: Regression methods
+    ############################
+
+    #OLS
+    if RM == 1:
+        B = linalg.inv(X1.conj().T@X1)@X1.conj().T@Y1
+
+    #LS-SVD
+    elif RM == 2:
+        U, S, Vh = linalg.svd(X1 ,full_matrices=False)
+        V = Vh.T
+        S_inv = np.diag(1/S)
+        B = V@S_inv@U.conj().T@Y1
+
+    #LAD-PP
+    elif RM == 3:
+        BND = [(-100, 100)]*n1 + [(0, None)]*2*T
+        f = np.vstack((np.zeros((n1,1)), np.ones((2*T,1))))
+        Aeq = np.concatenate((X1, np.eye(T), -np.eye(T)), axis=1)
+        B =[]
+        #solve the equation
+        for i in range(N):
+            beq = Y1[:,i]
+            result = linprog(f, A_eq = Aeq, b_eq = beq, bounds= BND, method="highs-ipm")
+            B.append(list(result.x[0:n1]))
+        B = np.asarray(B).T
+
+    # RLS-Tikhonov
+    elif RM == 4:
+        B = linalg.inv(X1.conj().T@X1+T/n1*np.eye(n1)*10**penalty)@X1.conj().T@Y1
+
+    # RLS-TSVD
+    elif RM == 5:
+        U, S, Vh = linalg.svd(X1, full_matrices=False)
+        V = Vh.T
+        r = np.count_nonzero(np.divide(np.diag(S).max(), np.diag(S))<= 10**(penalty))
+        Sr_inv = np.zeros((n1,n1))
+        Sr_inv[0:r, 0:r]= np.diag(np.divide(1., S))
+        B = V@Sr_inv@U.conj().T@Y1
+
+    # RLAD-PP
+    elif RM == 6:
+        #we can just use the default setting from scipy as the lower and upper will be the same
+        f= np.vstack((10**penalty*np.ones((n1*2,1))*T/n1, np.ones((2*T,1))))
+        Aeq= np.c_[X1,-X1, np.eye(T), -np.eye(T)]
+        B = []
+        #solve the equation
+        for i in range(N):
+            beq = Y1[:,i]
+            result = linprog(f, A_eq = Aeq, b_eq = beq, method="highs-ipm")
+            B.append(list(result.x[0:n1]-result.x[n1:2*n1]))
+        B = np.asarray(B).T
+    
+    #Step 4: Infer the regression coefficients in the original regression with unnormalised data
+    ############################################################################################
+
+    if ((normalize==1) or (RM>=5)):
+        B2 = (1/np.std(X[:,1:n], axis=0).conj().T).reshape((n1,1))@np.std(Y, axis=0)[np.newaxis,]*B
+        B1 = Y.mean(axis=0)[np.newaxis,] - X[:, 1:n].mean(axis=0)[np.newaxis,]@B2
+        B = np.vstack((B1,B2))
+    
+    return B
