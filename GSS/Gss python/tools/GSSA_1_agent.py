@@ -590,8 +590,10 @@ def GSSA_poly(T, a, z, d, PF, zb, RM, penalty, normalize, dif_GSSA_D, kdamp, alp
 def GSSA_ShowcaseResult():
     '''
     This function aims to simply showcase the python implementation of GSSA with respect to the authors original
-    Matlab codes. Notice that all the arguments are pre-determined. In general, the runtime of python is
-    slower, but yields a higher accuracy than Matlab.
+    Matlab codes.
+    ---------
+    Notice: All values are predetermined as the original matlab codes, also the comments closely follow the original
+    comments to ensure transparency of the translation.
 
     ----------
     Output:
