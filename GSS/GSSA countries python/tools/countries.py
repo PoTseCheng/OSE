@@ -11,7 +11,7 @@ import time
 
 def randn2(*args,**kwargs):
     '''
-    Calls rand and applies inverse transform sampling to the output.
+    The randn function that matlab uses.
     '''
     uniform = rand(*args, **kwargs)
     return sqrt(2) * erfinv(2 * uniform - 1)
@@ -23,15 +23,15 @@ def Productivity(T, N, a_init, sigma, rho):
     and the corresponding series of the productivity levels.
     ----------
     Arguments:
-    T(int): Simulation length, needs to be at least 1
-    N(int): Number of countries, notice N needs to be at least 1.
-    a_int(2D-numpy): The initial condition given for the productivity levels of N countries.
-    sigma(float): Parameters of the model in Kenneth L. Judd et.al (2011).
-    rho(float): Parameters of the model in Kenneth L. Judd et.al (2011).
+        T(int): Simulation length, needs to be at least 1
+        N(int): Number of countries, notice N needs to be at least 1.
+        a_int(2D-numpy): The initial condition given for the productivity levels of N countries.
+        sigma(float): Parameters of the model in Kenneth L. Judd et.al (2011).
+        rho(float): Parameters of the model in Kenneth L. Judd et.al (2011).
 
     ----------
     Output:
-    a(2D numpy array): Time series of the productivity levels of N countries.
+        a(2D numpy array): Time series of the productivity levels of N countries.
     
     '''
     np.random.seed(123)
@@ -54,12 +54,12 @@ def Ord_Polynomial_N(z, D):
     Summary
     ----------
     Arguments:
-    z(2D numpy array): Data points on which the polynomial basis functions must be constructed.
-    D(int): 1 to 5 the degree of the polynomial whose basis functions must be constructed.
+        z(2D numpy array): Data points on which the polynomial basis functions must be constructed.
+        D(int): 1 to 5 the degree of the polynomial whose basis functions must be constructed.
 
     ----------
     Output:
-    basis_fs(2D numpy array): Matrix with complete degrees of polynominal.
+        basis_fs(2D numpy array): Matrix with complete degrees of polynominal.
     
     '''
     n_rows, dimen = np.shape(z)
@@ -112,15 +112,15 @@ def GH_Quadrature(Qn, N, vcv):
     This function constructs integration nodes and weights under Gauss-Hermite quadrature (product) integration rule with Qn<=10 nodes in each of N dimensions.
     ----------
     Arguments:
-    Qn(int): The number of nodes in each dimension, notice that Qn must be between 1 to 10.
-    N(int): The number of countries.
-    vcv(2D numpy array): The predefined covariance matrix.
+        Qn(int): The number of nodes in each dimension, notice that Qn must be between 1 to 10.
+        N(int): The number of countries.
+        vcv(2D numpy array): The predefined covariance matrix.
 
     ----------
     Outputs:
-    n_nodes(int):Total number of integration nodes.
-    epsi_nodes(2D numpy array):Integration nodes.
-    weight_nodes(2D numpy array):Integration weights.
+        n_nodes(int):Total number of integration nodes.
+        epsi_nodes(2D numpy array):Integration nodes.
+        weight_nodes(2D numpy array):Integration weights.
     
     '''
     #For the following codes#######################
@@ -189,14 +189,14 @@ def Monomials_1(N, vcv):
     This function constructs integration nodes and weights under N-dimensional monomial (non-product) integration rule with 2N nodes.
     ----------
     Arguments:
-    N(int): Number of countries.
-    vcv(2D numpy array): The predefined covariance matrix.
+        N(int): Number of countries.
+        vcv(2D numpy array): The predefined covariance matrix.
     
     ----------
     Outputs:
-    n_nodes(int): Total number of integration nodes.
-    epsi_nodes(2D numpy array): Integration nodes.
-    weight_nodes(2D numpy array): Integration weights.
+        n_nodes(int): Total number of integration nodes.
+        epsi_nodes(2D numpy array): Integration nodes.
+        weight_nodes(2D numpy array): Integration weights.
     
     '''
 
@@ -295,16 +295,15 @@ def Num_Stab_Approx(X, Y, RM, penalty, normalize):
     This function implements the approximation methods mentioned in Judd et al. (2011)
     --------
     Arguments:
-    X(2D numpy array): Matrix of dependent variables in a regression.
-    Y(2D numpy array):Matrix of independent variables.
-    RM(int): Regression (approximation) method, from 1 to 6. RLAD-DP & LAD-DP are not included,
-    see notebook for reasoning.
-    penalty(int): Regularisation parameter for a regularisation methods.
-    normalize(int): Optional parameter to normalise the data or not. 1 or 0.
+        X(2D numpy array): Matrix of dependent variables in a regression.
+        Y(2D numpy array):Matrix of independent variables.
+        RM(int): Regression (approximation) method, from 1 to 6. RLAD-DP & LAD-DP are not included, see notebook for reasoning.
+        penalty(int): Regularisation parameter for a regularisation methods.
+        normalize(int): Optional parameter to normalise the data or not. 1 or 0.
 
     ---------
     Outputs:
-    B(2D numpy array): Matrix of the regression coefficients.
+        B(2D numpy array): Matrix of the regression coefficients.
 
     '''
     
@@ -397,24 +396,25 @@ def Accuracy_Test_N(k, a, bk, D, IM, alpha, gam, delta, beta, A, tau, rho, vcv, 
     --------
     Arguments:
 
-    k(2D numpy array): Current-period capital
-    a(2D numpy array): Current productivity levels
-    bk(2D numpy array): Coefficients of the capital policy functions of N countries
-    IM(int): Integration method in the original GSSA model
-    alpha(float): Capital share in output
-    gam(float): Utility-function parameter
-    delta(float): Depreciation rate 
-    beta(float): Discount factor
-    A(float): The normalizing constant in output
-    tau(float): The welfare weight of country
-    rho(float): Persistence of the log of the productivity level
-    vcv(2D numpy array):
-    discard(int): Data points to discard
+        k(2D numpy array): Current-period capital
+        a(2D numpy array): Current productivity levels
+        bk(2D numpy array): Coefficients of the capital policy functions of N countries
+        IM(int): Integration method in the original GSSA model
+        alpha(float): Capital share in output
+        gam(float): Utility-function parameter
+        delta(float): Depreciation rate 
+        beta(float): Discount factor
+        A(float): The normalizing constant in output
+        tau(float): The welfare weight of country
+        rho(float): Persistence of the log of the productivity level
+        vcv(2D numpy array):
+        discard(int): Data points to discard
     --------
     Output:
-    Errors_mean(float): The mean approximation errors
-    Errors_max(float): The maximum approximation errors
-    time_test(float): The time to run the test
+    
+        Errors_mean(float): The mean approximation errors
+        Errors_max(float): The maximum approximation errors
+        time_test(float): The time to run the test
     '''
     start = time.time()
     #1. Get number of points P, which accuracy are evaluated with respect to country N
@@ -542,14 +542,15 @@ def GSSA_country_showcase():
     ------
     Notice: All values are predetermined as the original matlab codes, also the comments closely follow the original
     comments to ensure transparency of the translation. Also this code will take at least 1.5 hours to run.
+    
     ------
     Output:
-    BK(list): List of 2D numpy array of coefficient of each polynominal 
-    Time(list): List of run time for each polynominal in Stage 2
-    stage1(float): Time for initial Monte Carol guess (Stage 1)
-    Max(list): List of maximum approximation errors for each polynominal
-    Mean(list): List of mean approximation errors for each polynominal
-    Test_time(list): List of time for testing accuracy
+        BK(list): List of 2D numpy array of coefficient of each polynominal 
+        Time(list): List of run time for each polynominal in Stage 2
+        stage1(float): Time for initial Monte Carol guess (Stage 1)
+        Max(list): List of maximum approximation errors for each polynominal
+        Mean(list): List of mean approximation errors for each polynominal
+        Test_time(list): List of time for testing accuracy
     '''
     #Road map:
     #The 4 main parts follow the construction of the original code in Matlab
