@@ -56,7 +56,7 @@ def Ord_Herm_Pol_1(z,D,PF,zb):
     ----------
     Arguments:
         z(numpy array): Data points on which the polynomial basis functions must be constructed.
-        D(int): The degree of the polynomial whose basis functions must be constructed. Can be 1~5
+        D(int): The degree of the polynomial whose basis functions must be constructed. Can be 1~5.
         PF(binary): The polynomial family chosen: 0=Ordinary, 1=Hermite.
         zb(numpy array): Matrix of means and standard deviations of state variables. 
     
@@ -66,6 +66,7 @@ def Ord_Herm_Pol_1(z,D,PF,zb):
     '''
     
     num_rows = z.shape[0]
+
     if PF == 1:
         zc1 = (z[:, 0]-zb[0, 0])/zb[1, 0]
         zc2 = (z[:, 1]-zb[0, 1])/zb[1, 1]
@@ -81,86 +82,8 @@ def Ord_Herm_Pol_1(z,D,PF,zb):
         q3 = np.power(zc2, 3)-3*zc2
         q4 = np.power(zc2, 4)-6*(np.power(zc2, 2))+3
         q5 = np.power(zc2, 5)-10*(np.power(zc2, 3))+15*zc2
-        if D == 1:
-            basis = np.concatenate((np.ones((num_rows, 1)),
-            p1.reshape(num_rows, 1),
-            q1.reshape(num_rows, 1)
-            ), axis=1)
-            return basis
-
-                
-        elif D == 2:
-            basis = np.concatenate((np.ones((num_rows, 1)),
-            p1.reshape(num_rows, 1),
-            q1.reshape(num_rows, 1),
-            p2.reshape(num_rows, 1),
-            np.multiply(p1, q1).reshape(num_rows, 1),
-            q2.reshape(num_rows, 1)
-            ), axis=1)
-            return basis
-
-
-        elif D == 3:
-            basis = np.concatenate((np.ones((num_rows, 1)),
-            p1.reshape(num_rows, 1),
-            q1.reshape(num_rows, 1),
-            p2.reshape(num_rows, 1),
-            np.multiply(p1, q1).reshape(num_rows, 1),
-            q2.reshape(num_rows, 1),
-            p3.reshape(num_rows, 1),
-            np.multiply(p2, q1).reshape(num_rows, 1),
-            np.multiply(p1, q2).reshape(num_rows, 1),
-            q3.reshape(num_rows, 1)
-            ), axis=1)
-            return basis
-
-
-        elif D == 4:
-            basis = np.concatenate((np.ones((num_rows, 1)),
-            p1.reshape(num_rows, 1),
-            q1.reshape(num_rows, 1),
-            p2.reshape(num_rows, 1),
-            np.multiply(p1, q1).reshape(num_rows, 1),
-            q2.reshape(num_rows, 1),
-            p3.reshape(num_rows, 1),
-            np.multiply(p2, q1).reshape(num_rows, 1),
-            np.multiply(p1, q2).reshape(num_rows, 1),
-            q3.reshape(num_rows, 1),
-            p4.reshape(num_rows, 1),
-            np.multiply(p3, q1).reshape(num_rows, 1),
-            np.multiply(p2, q2).reshape(num_rows, 1),
-            np.multiply(p1, q3).reshape(num_rows, 1),
-            q4.reshape(num_rows, 1)
-            ), axis=1)
-            return basis
-
-
-        elif D == 5:
-            basis = np.concatenate((np.ones((num_rows, 1)),
-            p1.reshape(num_rows, 1),
-            q1.reshape(num_rows, 1),
-            p2.reshape(num_rows, 1),
-            np.multiply(p1, q1).reshape(num_rows, 1),
-            q2.reshape(num_rows, 1),
-            p3.reshape(num_rows, 1),
-            np.multiply(p2, q1).reshape(num_rows, 1),
-            np.multiply(p1, q2).reshape(num_rows, 1),
-            q3.reshape(num_rows, 1),
-            p4.reshape(num_rows, 1),
-            np.multiply(p3, q1).reshape(num_rows, 1),
-            np.multiply(p2, q2).reshape(num_rows, 1),
-            np.multiply(p1, q3).reshape(num_rows, 1),
-            q4.reshape(num_rows, 1),
-            p5.reshape(num_rows, 1),
-            np.multiply(p4, q1).reshape(num_rows, 1),
-            np.multiply(p3, q2).reshape(num_rows, 1),
-            np.multiply(p2, q3).reshape(num_rows, 1),
-            np.multiply(p1, q4).reshape(num_rows, 1),
-            q5.reshape(num_rows, 1)
-            ), axis=1)
-            return basis
-            
-        # If the polynomial family chosen is ordinary##
+    
+    # If the polynomial family chosen is ordinary##
     else:
         zc1 = z[:, 0] # No normalization
         zc2 = z[:, 1] # No normalization
@@ -176,28 +99,22 @@ def Ord_Herm_Pol_1(z,D,PF,zb):
         q3 = np.power(zc2, 3)
         q4 = np.power(zc2, 4)
         q5 = np.power(zc2, 5)
-        # Construct the matrix of the basis functions
-        if D == 1:
-            basis = np.concatenate((np.ones((num_rows, 1)),
-            p1.reshape(num_rows, 1),
-            q1.reshape(num_rows, 1)
-            ), axis=1)
 
-            return basis
-
-        elif D == 2:
-            basis = np.concatenate((np.ones((num_rows, 1)),
+    if D == 1:
+        basis = np.concatenate((np.ones((num_rows, 1)),
+                p1.reshape(num_rows, 1),
+                q1.reshape(num_rows, 1)), axis=1)
+    
+    elif D == 2:
+        basis = np.concatenate((np.ones((num_rows, 1)),
             p1.reshape(num_rows, 1),
             q1.reshape(num_rows, 1),
             p2.reshape(num_rows, 1),
             np.multiply(p1, q1).reshape(num_rows, 1),
-            q2.reshape(num_rows, 1)
-            ), axis=1)
+            q2.reshape(num_rows, 1)), axis=1)
 
-            return basis
-
-        elif D == 3:
-            basis = np.concatenate((np.ones((num_rows, 1)),
+    elif D == 3:
+        basis = np.concatenate((np.ones((num_rows, 1)),
             p1.reshape(num_rows, 1),
             q1.reshape(num_rows, 1),
             p2.reshape(num_rows, 1),
@@ -206,12 +123,10 @@ def Ord_Herm_Pol_1(z,D,PF,zb):
             p3.reshape(num_rows, 1),
             np.multiply(p2, q1).reshape(num_rows, 1),
             np.multiply(p1, q2).reshape(num_rows, 1),
-            q3.reshape(num_rows, 1)
-            ), axis=1)
+            q3.reshape(num_rows, 1)), axis=1)
 
-            return basis
-        elif D == 4:
-            basis = np.concatenate((np.ones((num_rows, 1)),
+    elif D == 4:
+        basis = np.concatenate((np.ones((num_rows, 1)),
             p1.reshape(num_rows, 1),
             q1.reshape(num_rows, 1),
             p2.reshape(num_rows, 1),
@@ -225,13 +140,10 @@ def Ord_Herm_Pol_1(z,D,PF,zb):
             np.multiply(p3, q1).reshape(num_rows, 1),
             np.multiply(p2, q2).reshape(num_rows, 1),
             np.multiply(p1, q3).reshape(num_rows, 1),
-            q4.reshape(num_rows, 1)
-            ), axis=1)
+            q4.reshape(num_rows, 1)), axis=1)
 
-            return basis
-        elif D == 5:
-            
-            basis = np.concatenate((np.ones((num_rows, 1)),
+    elif D == 5:
+        basis = np.concatenate((np.ones((num_rows, 1)),
             p1.reshape(num_rows, 1),
             q1.reshape(num_rows, 1),
             p2.reshape(num_rows, 1),
@@ -251,9 +163,9 @@ def Ord_Herm_Pol_1(z,D,PF,zb):
             np.multiply(p3, q2).reshape(num_rows, 1),
             np.multiply(p2, q3).reshape(num_rows, 1),
             np.multiply(p1, q4).reshape(num_rows, 1),
-            q5.reshape(num_rows, 1)
-            ), axis=1)
-            return basis
+            q5.reshape(num_rows, 1)), axis=1)
+    
+    return basis
 
 def Num_Stab_Approx(x,y,RM,penalty,normalised):
     '''
@@ -299,27 +211,24 @@ def Num_Stab_Approx(x,y,RM,penalty,normalised):
         Y1 = Y1.astype(float)
         n1 = n-1 # Number of coefficients in a regression with normalized data is reduced by 1 (no intercept)
     else:
-        #Leave the values without any changes
+        # Leave the values without any changes
         X1 = x
-        Y1 = y         
+        Y1 = y
         n1 = n
     
     # Step 3: choosing an approximate method from the paper
     #------------------------------------------------------
 
-    #simple OLS
+    # Simple OLS
     if RM == 1:
-        B = np.matmul(
-            inv(np.matmul(X1.transpose(),X1).astype(float)), #need to convert the output to float or else return error
-            np.matmul(X1.transpose(),Y1)
-            )
+        B = inv(X1.conj().T@X1)@X1.conj().T@Y1
 
-    #LS-SVD
+    # LS-SVD
     elif RM == 2:
         U, S, Vh = svd(X1, full_matrices=False)
         V = Vh.T
         S_inv = np.diag(1/S)
-        B = np.matmul(np.matmul(np.matmul(V,S_inv),U.transpose()),Y1)
+        B = V@S_inv@U.conj().T@Y1
     
     #LAD-PP
     elif RM == 3:
@@ -327,11 +236,11 @@ def Num_Stab_Approx(x,y,RM,penalty,normalised):
         f = np.vstack((np.zeros((n1,1)), np.ones((2*T,1))))
         Aeq = np.concatenate((X1, np.eye(T), -np.eye(T)), axis=1)
         B =[]
-        #solve the equation
+        # Solve the equation
         for i in range(N):
             beq = Y1[:,i]
             result = linprog(f, A_eq = Aeq, b_eq = beq, bounds= BND, method="highs-ipm")
-            #do not change the method here, or else will result in memory overload
+            # do not change the method here, or else will result in memory overload
             B.append(list(result.x[0:n1]))
         B = np.asarray(B).T
     
@@ -349,14 +258,9 @@ def Num_Stab_Approx(x,y,RM,penalty,normalised):
         B.append(result.x[0:n1])
     #####Despite we can get an answer from Scipy, this is not the answer we want, as we want the lagrange multiplier for coefficient
     
-    #RLS-Tikhonov
+    # RLS-Tikhonov
     elif RM == 5:
-        B = np.matmul(
-            inv(
-                np.matmul(X1.transpose(),X1) + (T/n1)*np.identity(n1)*10**(penalty)
-               ),
-            np.matmul(X1.transpose(),Y1)
-            )
+        B = linalg.inv(X1.conj().T@X1+T/n1*np.eye(n1)*10**penalty)@X1.conj().T@Y1
 
     # RLS-TSVD
     elif RM == 6:
@@ -553,7 +457,7 @@ def GSSA_poly(T, a, z, d, PF, zb, RM, penalty, normalize, dif_GSSA_D, kdamp, alp
     Stage 2 of 1 agent GSSA.
     ---------
     Parameters:
-        T(int): Simulation points.
+        T(int): Simulation points
         a(numpy array): Productivity levels.
         z(numpy array): Data points on which the polynomial basis functions must be constructed.
         d(int): Number of polynomial.
@@ -561,9 +465,9 @@ def GSSA_poly(T, a, z, d, PF, zb, RM, penalty, normalize, dif_GSSA_D, kdamp, alp
         zb(numpy array): Matrix of means and standard deviations of state variables.
         RM(int): Regression method. 1=OLS, 2=LS-SVD, 3=LAD-PP, 4=LAD-DP, 5=RLS-Tikhonov, 6=RLS-TSVD, 7=RLAD-PP.
         penalty(int): Degree of regularization for a regularization methods, in particular RM= 5~7. For RM=6 needs to be positive, others negative.
-        normalize(binary): Option of normalizing the data. 0=unnormalized data, 1=normalized data.   
+        normalize(binary): Option of normalizing the data. 0=unnormalized data, 1=normalized data .
         dif_GSSA_D: The initial difference between the series from two iterations in the convergence criterion.
-        kdamp(float): Damping parameter. 
+        kdamp(float): Damping parameter.
         alpha(float): Capital share in output.
         beta(float): Discount factor.
         delta(float): Depreciation rate.
@@ -786,12 +690,12 @@ def GSSA_ShowcaseResult():
     return showcase_result
 
 
-def GSSA_1_agent(DC=5, IM=10, RM=6 ,normalize=1, penalty=7, PF=0):
+def GSSA_1_agent(D_max=5, IM=10, RM=6 ,normalize=1, penalty=7, PF=0):
     '''
     This is a modified version of the showcase code, notice that the total simulations are unified to 3000 following JMM (2011).
     --------
     Arguments:
-        DC(int): Default is 5
+        D_max(int): Default is 5
         IM(int): Default is 10
         RM(int): Default is 6
         normalize(binary): Default is 1
@@ -856,7 +760,7 @@ def GSSA_1_agent(DC=5, IM=10, RM=6 ,normalize=1, penalty=7, PF=0):
     kdamp = 0.1
     dif_GSSA_D = 1e+10
     #The matrices of the polynomial coefficients
-    D_max  = DC 
+    D_max  = D_max 
     npol = np.array([3, 6, 10, 15, 21])
 
     #Choosing integration method, please consult showcase for the specifics 
@@ -868,7 +772,7 @@ def GSSA_1_agent(DC=5, IM=10, RM=6 ,normalize=1, penalty=7, PF=0):
     #Please consult the showcase code for the existing methods
     RM = RM               
     normalize = normalize                      
-    penalty = pt      
+    penalty = penalty      
     PF = PF          
     zb = np.matrix([[np.mean(k[0:T]), np.mean(a[0:T])], [np.std(k[0:T]), np.std(a[0:T])]])
     z = np.concatenate((k[0:T].reshape(T,1), a[0:T].reshape(T,1)), axis=1)
@@ -885,7 +789,7 @@ def GSSA_1_agent(DC=5, IM=10, RM=6 ,normalize=1, penalty=7, PF=0):
     #Accuracy testing
     ########################
     T_test = 10000
-    np.random.seed(100)
+    np.random.seed(123)
     df_prep = randn2(T_test)
     df = pd.DataFrame(df_prep)
     epsi_test = sigma*df.to_numpy().astype(float)
@@ -912,4 +816,4 @@ def GSSA_1_agent(DC=5, IM=10, RM=6 ,normalize=1, penalty=7, PF=0):
         result_mean.append(mean_error)
         result_time.append(error_time)
     
-    return result_max, result_mean, error_time, BK, Time, stage1_time
+    return result_max, result_mean, error_time, Time, stage1_time

@@ -4,26 +4,6 @@ import seaborn as sns
 import matplotlib.pyplot as plt
 import pandas as pd
 
-def reading(x):
-    '''
-    Homemade reader for csv file produced by homemade converter, an alternative for scipy.io.loadmat.
-
-    Parameters:
-    x(str):Csv file from converter
-
-    Returns:
-    Pandas dataframe
-    '''
-    df=pd.read_csv(x)
-    add=df.columns.tolist()
-    df.loc[-1] = add 
-    df.index = df.index + 1  
-    df = df.sort_index()
-    df.columns=[x.replace(".csv","")]
-
-    return df
-
-####Figures########################################################
 
 def Figure1():
     '''

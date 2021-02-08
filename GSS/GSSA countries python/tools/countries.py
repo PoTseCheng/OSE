@@ -396,25 +396,25 @@ def Accuracy_Test_N(k, a, bk, D, IM, alpha, gam, delta, beta, A, tau, rho, vcv, 
     --------
     Arguments:
 
-        k(2D numpy array): Current-period capital
-        a(2D numpy array): Current productivity levels
-        bk(2D numpy array): Coefficients of the capital policy functions of N countries
-        IM(int): Integration method in the original GSSA model
-        alpha(float): Capital share in output
-        gam(float): Utility-function parameter
-        delta(float): Depreciation rate 
-        beta(float): Discount factor
-        A(float): The normalizing constant in output
-        tau(float): The welfare weight of country
-        rho(float): Persistence of the log of the productivity level
-        vcv(2D numpy array):
-        discard(int): Data points to discard
+        k(2D numpy array): Current-period capital.
+        a(2D numpy array): Current productivity levels.
+        bk(2D numpy array): Coefficients of the capital policy functions of N countries.
+        IM(int): Integration method in the original GSSA model.
+        alpha(float): Capital share in output.
+        gam(float): Utility-function parameter.
+        delta(float): Depreciation rate.
+        beta(float): Discount factor.
+        A(float): The normalizing constant in output.
+        tau(float): The welfare weight of country.
+        rho(float): Persistence of the log of the productivity level.
+        vcv(2D numpy array): Variance-covariance matrix of the countries' productivity shocks.
+        discard(int): Data points to discard.
     --------
     Output:
     
-        Errors_mean(float): The mean approximation errors
-        Errors_max(float): The maximum approximation errors
-        time_test(float): The time to run the test
+        Errors_mean(float): The mean approximation errors.
+        Errors_max(float): The maximum approximation errors.
+        time_test(float): The time to run the test.
     '''
     start = time.time()
     #1. Get number of points P, which accuracy are evaluated with respect to country N
@@ -545,12 +545,12 @@ def GSSA_country_showcase():
     
     ------
     Output:
-        BK(list): List of 2D numpy array of coefficient of each polynominal 
-        Time(list): List of run time for each polynominal in Stage 2
-        stage1(float): Time for initial Monte Carol guess (Stage 1)
-        Max(list): List of maximum approximation errors for each polynominal
-        Mean(list): List of mean approximation errors for each polynominal
-        Test_time(list): List of time for testing accuracy
+        BK(list): List of 2D numpy array of coefficient of each polynominal.
+        Time(list): List of run time for each polynominal in Stage 2.
+        stage1(float): Time for initial Monte Carol guess (Stage 1).
+        Max(list): List of maximum approximation errors for each polynominal.
+        Mean(list): List of mean approximation errors for each polynominal.
+        Test_time(list): List of time for testing accuracy.
     '''
     #Road map:
     #The 4 main parts follow the construction of the original code in Matlab
