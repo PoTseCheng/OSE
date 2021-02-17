@@ -612,7 +612,7 @@ def GSSA_ShowcaseResult():
 
     # 13. Choose an integration method for computing solutions  
     IM  = 10
-    n_nodes,epsi_nodes, weight_nodes= GH_Quadrature(Qn=10, N=1, vcv=sigma**2)
+    n_nodes,epsi_nodes, weight_nodes= GH_Quadrature(IM, N=1, vcv=sigma**2)
 
     #make sure to change a into the right shape
     a = np.reshape(a, (T, 1))
@@ -690,17 +690,19 @@ def GSSA_ShowcaseResult():
     return showcase_result
 
 
-def GSSA_1_agent(D_max=5, IM=10, RM=6 ,normalize=1, penalty=7, PF=0):
+def GSSA_1_agent(T=3000, T_test=10000, D_max=5, IM=10, RM=6 ,normalize=1, penalty=7, PF=0):
     '''
     This is a modified version of the showcase code, notice that the total simulations are unified to 3000 following JMM (2011).
     --------
     Arguments:
-        D_max(int): Default is 5
-        IM(int): Default is 10
-        RM(int): Default is 6
-        normalize(binary): Default is 1
-        penalty(int): Default is 7
-        PF(binary):  Default is 0
+        T(int): Number of simulations. Default is 3000.
+        T_test(int): Default is 10000
+        D_max(int): Default is 5.
+        IM(int): Default is 10.
+        RM(int): Default is 6.
+        normalize(binary): Default is 1.
+        penalty(int): Default is 7.
+        PF(binary):  Default is 0.
 
     -----------
     Output:
@@ -765,7 +767,7 @@ def GSSA_1_agent(D_max=5, IM=10, RM=6 ,normalize=1, penalty=7, PF=0):
 
     #Choosing integration method, please consult showcase for the specifics 
     IM  = IM
-    n_nodes,epsi_nodes, weight_nodes= GH_Quadrature(Qn=10, N=1, vcv=sigma**2)
+    n_nodes,epsi_nodes, weight_nodes= GH_Quadrature(IM, N=1, vcv=sigma**2)
     a = np.reshape(a, (T, 1))
     a1 = np.matmul(np.power(a,rho), np.exp(epsi_nodes.transpose()))
 
@@ -789,7 +791,7 @@ def GSSA_1_agent(D_max=5, IM=10, RM=6 ,normalize=1, penalty=7, PF=0):
     #Accuracy testing
     ########################
     T_test = 10000
-    np.random.seed(123)
+    np.random.seed(100)
     df_prep = randn2(T_test)
     df = pd.DataFrame(df_prep)
     epsi_test = sigma*df.to_numpy().astype(float)
@@ -810,7 +812,7 @@ def GSSA_1_agent(D_max=5, IM=10, RM=6 ,normalize=1, penalty=7, PF=0):
             k_test.append(value)
         
         #The T_test - discard needs to match the exact numbers of simulations
-        discard = 7000 
+        discard = T_test-T
         mean_error, max_error, error_time = Accuracy_Test_1(sigma,rho,beta,gam,alpha,delta,k_test,a_test,BK[d-1],d,IM_test,PF,zb,discard)
         result_max.append(max_error)
         result_mean.append(mean_error)
