@@ -7,7 +7,8 @@ from scipy import linalg
 from scipy.optimize import linprog
 import scipy.io
 import time
-
+import pandas as pd
+import os
 
 def randn2(*args,**kwargs):
     '''
@@ -533,16 +534,13 @@ def Accuracy_Test_N(k, a, bk, D, IM, alpha, gam, delta, beta, A, tau, rho, vcv, 
 
     return Errors_mean, Errors_max, time_test
 
-
-
-
-def GSSA_country_showcase():
+def GSSA_country(N=2):
     '''
     This function showcase the python implementation from the original matlab codes.
     ------
-    Notice: All values are predetermined as the original matlab codes, also the comments closely follow the original
-    comments to ensure transparency of the translation. Also this code will take at least 1.5 hours to run.
-    
+    Argument:
+        N(int):Number of countries. Default is 2
+
     ------
     Output:
         Time(list): List of run time for each polynominal in Stage 2.
@@ -554,16 +552,16 @@ def GSSA_country_showcase():
     #Road map:
     #The 4 main parts follow the construction of the original code in Matlab
     #1: Simulation
-    #2: GSSA stage 1
-    #3: GSSA stage 2
-    #4: GSSA accuracy
+    #2: GSSA stage 1:Initial Guess
+    #3: GSSA stage 1:Updating Initial Guess
+    #4: GSSA stage 2
 
     #################################
     #Simulation
     #################################
 
-    #####User defined parameters
-    N = 1
+    # User defined parameters
+    N = N
     T = 2000
     # Model parameters
     gam = 1
@@ -572,32 +570,287 @@ def GSSA_country_showcase():
     delta = 0.025
     rho = 0.95
     sigma = 0.01
-    ######################################
     # Variance-covariance matrix
     vcv = sigma**(2)*(np.eye(N)+ np.ones(N))
     # Normalising constant
     A = (1-beta+beta*delta)/alpha/beta
     # welfare weight
     tau = 1
-    ######################################
-    #The above normalization ensures that steady state
+    # The above normalization ensures that steady state
     k = np.ones((T+1,N))
     a = np.ones((1,N))
-    #####################################
+
     #construct productivity levels
     #a20200 = Productivity(T,N,a,sigma,rho)
 
-    #checking solution with matlab
-    a20200 = scipy.io.loadmat("aT20200N10.mat").get("a20200")
+    # Notice: Similar to the original matlab code, we will be using a prepared dataset by the authors
+    # but one can of course uncomment the Productivity and simulate it
+    real_path= os.path.join(os.getcwd(), "data\\")
+    a20200 = scipy.io.loadmat(real_path+r"aT20200N10.mat").get("a20200")
     a20200 = a20200[:T, :N]
 
-    # Notice: Similar to the original matlab code, we comment this option out,
-    # but one can of course decomment it and use it.
+    
+
+    ##########################
+    # GSSA stage 1:First Guess
+    ##########################
+    # Compute a first-degree polynomial solution using the one-node Monte Carlo integration method 
+    # (this #solution will be used as an initial guess for the other cases) 
+
+    start = time.time()
+    kdamp = 0.1
+    dif_1d = 1e+10
+    # Initialize the first-degree capital policy functions of N countries 
+    bk_1d= np.vstack((np.zeros((1,N)), np.diag(0.9*np.ones(N)),np.diag(0.1*np.ones(N))))
+    # Initialize the capital series
+    k_old = np.ones((T+1,N))
+    # containers
+    Y = np.empty((T-1,N))
+    # The main iterative cycle of GSSA
+    while dif_1d > 1e-4*kdamp:
+        # construct starting numpy for value storages
+        x = np.empty((T,2*N+1))
+        for i in range(T):
+            x[i]= np.hstack((1,k[i], a20200[i]))
+            k[i+1]= np.hstack((1,k[i], a20200[i]))@bk_1d
+
+        # Compute consumption series 
+        C = (A*k[:T]**alpha*a20200[:T]-k[1:T+1]+(1-delta)*k[:T])@np.ones((N,1))
+        # Individual consumption is the same for all countries
+        c = C@np.ones((1,N))/N
+        # Evaluate the percentage (unit-free) difference between the series from the previous and current iterations
+        dif_1d = np.mean(abs(1-k/k_old))
+        # Monte Carlo realizations of the right side of the Euler equation
+        
+        for i in range(N):
+            Y[:T-1,i]= beta*c[1:T,i]**(-gam)/c[:T-1,i]**(-gam)*(1-delta+alpha*A*k[1:T,i]**(alpha-1)*a20200[1:T,i])*k[1:T,i]
+        
+        #Compute and update the coefficients of the capital policy functions
+        bk_hat_1d = linalg.inv(x[:T-1].conj().T@x[:T-1])@x[:T-1].conj().T@Y[:T-1]
+        bk_1d = kdamp*bk_hat_1d+(1-kdamp)*bk_1d
+        k_old = k.copy()
+
+    # timing the function
+    end = time.time()
+    stage1 = end-start
 
     ######################################
-    #GSSA stage 1
+    # GSSA Stage 1: Updating initial guess
     ######################################
-    #Compute a first-degree polynomial solution using the one-node Monte Carlo integration method (this #solution will be used as an initial guess for the other cases) 
+    # Compute polynomial solutions of the degrees from one to D_max using one of the following integration methods: 
+    # Monte Carlo, Gauss-Hermite product and monomial non-product methods
+
+
+    # Damping parameter for (fixed-point) iteration on the coefficients of the capital policy functions
+    kdamp     = 0.1
+    # Set the initial difference between the series from two iterations in the convergence criterion   
+    # dif_GSSA_D  = 1e+10
+
+    # The matrix of the polynomial coefficients
+    D_max = 5
+
+    # construct container
+    npol = np.empty((1,D_max))
+
+    for i in range(1, D_max+1):
+        npol[0,i-1]= Ord_Polynomial_N(np.hstack((k[0],a20200[0]))[np.newaxis,], i).shape[1]
+    # Choose an integration method here
+    ###add more comments here
+    IM = 11
+
+    ##################################
+    if ((IM>=1) and (IM<=10)):
+        n_nodes, epsi_nodes, weight_nodes = GH_Quadrature(IM, N, vcv)
+    elif IM == 11:
+        n_nodes, epsi_nodes, weight_nodes = Monomials_1(N,vcv)
+    elif IM == 12:
+        n_nodes, epsi_nodes, weight_nodes = Monomials_2(N,vcv)
+
+    # Choose a regression method and specifications
+    #####only 6 methods avaliable here !!!!####
+
+    RM    = 5       
+    normalize = 1
+    penalty = 7 
+
+    #Compute the polynomial solutions of the degrees from one to D_max
+    #Construct empty container for results
+    Time = []
+    BK = []
+
+    for D in range(1, D_max+1):
+        start = time.time()
+        # Using the previously computed capital series, compute the initial 
+        # guess on the coefficients under the  selected approximation method
+        X = Ord_Polynomial_N(np.hstack((k[:T,:],a20200[:T,:])),D)
+        bk_D = Num_Stab_Approx(X[:T-1,:],Y[:T-1,:], RM, penalty, normalize)
+        k_old = np.ones((T+1,N))
+        dif_GSSA_D  = 1e+10
+        while dif_GSSA_D > 1e-4/10**D*kdamp:
+            #for checking purposes
+            #print(dif_GSSA_D)
+
+            #Generate time series of capital
+            for i in range(1, T+1):
+                X[i-1,] = Ord_Polynomial_N(np.hstack((k[i-1,:], a20200[i-1, :]))[np.newaxis,], D)
+                k[i,] = X[i-1,][np.newaxis,]@bk_D
+            
+            X = np.nan_to_num(X)
+            #15.2.2Compute consumption series of all countries:
+            ###################################################
+            # N current capital stocks  
+            k0 = k[0:T,]
+            # N current productivity levels 
+            a0 = a20200[0:T,]
+            # N next-period capital stocks
+            k1 = k[1:T+1,]
+            # Aggregate consumption is computed by summing up individual consumption, which in turn, is found from the individual budget constraints
+            C = (A*k0**alpha*a0 - k1+ (1-delta)*k0)@np.ones((N,1))
+
+            # Individual consumption is the same for all countries, check JMM (2011)
+            c = C@np.ones((1,N))/N
+
+            # Approximate the conditional expectations for t=1,...T-1 using the integration method chosen
+
+            # The one-node Monte Carlo integration method approximates the 
+            # values of the conditional expectations, Y, in the Euler equation with
+            # the realization of the integrand in the next period
+            if IM == 0:
+                for i in range(1, N+1):
+                    Y[0:T-1,i-1][:,np.newaxis] = beta*c[1:T,i-1][:,np.newaxis]**(-gam)/c[0:T-1, i-1][:,np.newaxis]**(-gam)*(1-delta+alpha*A*k[1:T,i-1][:,np.newaxis]**(alpha-1)*a20200[1:T,i-1][:,np.newaxis])*k[1:T,i-1][:,np.newaxis]
+
+                Y = np.nan_to_num(Y)
+            # Deterministic integration methods approximate the values of 
+            # conditional expectations, Y, in the Euler equation as a weighted average 
+            # of the values of the integrand in the given nodes with the given weights 
+            else:
+                Y = np.zeros((T,N))
+                for i in range(1, n_nodes+1):
+                    # Compute the next-period productivity levels for each integration node using condition (C3) in JMM (2011)
+                    a1 = a20200[0:T,:]**rho*np.exp(np.ones((T,1))@epsi_nodes[i-1,:][np.newaxis,])
+
+                    # Compute capital of period t+2 (chosen at t+1) using the capital policy functions
+                    k2 = Ord_Polynomial_N(np.hstack((k1, a1)),D)@bk_D
+
+                    # C is computed by summing up individual consumption, which in turn, is from the individual budget constraints
+                    C1 = (A*k1**alpha*a1-k2+(1-delta)*k1)@np.ones((N,1))
+
+                    # Compute next-period individual consumption for N countries 
+                    c1 = C1@np.ones((1,N))/N
+                    for i in range(1, N+1):
+                        Y[0:T,i-1][:,np.newaxis]= Y[0:T,i-1][:,np.newaxis]+ weight_nodes[i-1, 0]*beta*c1[0:T, i-1][:,np.newaxis]**(-gam)/c[0:T,i-1][:,np.newaxis]**(-gam)*(1-delta+alpha*A*k1[0:T,i-1][:,np.newaxis]**(alpha-1)*a1[0:T,i-1][:,np.newaxis])*k1[0:T, i-1][:,np.newaxis]
+
+                Y = np.nan_to_num(Y)
+            # Evaluate the percentage (unit-free) difference between the 
+            # capital series from the previous and current iterations
+            dif_GSSA_D = np.mean(abs(1-k/k_old))
+
+            # 15.2.5 Compute and update the coefficients of the capital policy 
+            # functions 
+ 
+            # Compute new coefficients of the capital 
+            # policy functions using the chosen 
+            # approximation method
+            bk_hat_D = Num_Stab_Approx(X[0:T-1,:], Y[0:T-1,:], RM, penalty, normalize)
+            bk_D = kdamp*bk_hat_D+ (1-kdamp)*bk_D
+
+            #15.2.6 Store the capital series 
+            #--------------------------------
+            k_old = k.copy()
+
+        # The GSSA output for the polynomial solution of degree D
+        end = time.time()
+        BK.append(bk_D)
+        Time.append(end-start)
+
+    ##############
+    # GSSA stage 2
+    ##############
+    # Choose the simulation length for the test on a stochastic simulation, T_test<=10,200
+    T_test = 10200
+    a20200 = scipy.io.loadmat(real_path+r"aT20200N10.mat").get("a20200")
+
+    # Restrict the series of the productivity levels for testing
+    a_test = a20200[T:T+T_test,0:N]
+
+    # Choose an integration method for evaluating accuracy of solutions
+    IM_test = 11
+
+    # Compute errors on a stochastic simulation for the GSSA polynomial solution of degrees D=1,...,D_max
+    Max = []
+    Mean = []
+    Test_time = []
+    for D in range(1, D_max+1):
+        # Simulate the time series solution under the given capital-
+        # policy-function coefficients, BK(:,:,D) with D=1,...,D_max 
+        bk = BK[D-1]
+        # Initial condition for capital (equal to steady state)
+        k_test = np.ones((1,N))
+
+        for j in range(1, T_test):
+            X_test = Ord_Polynomial_N(np.hstack((k_test[j-1][np.newaxis,],a_test[j-1,][np.newaxis,])), D)
+            k_test = np.vstack((k_test, X_test@bk))
+    
+        # Errors across 10,000 points on a stochastic simulation
+        discard = 200
+        Errors_mean, Errors_max, time_test = Accuracy_Test_N(k_test, a_test, bk, D, IM_test, alpha, gam, delta, beta, A, tau, rho, vcv, discard)
+        Max.append(Errors_max)
+        Mean.append(Errors_mean)
+        Test_time.append(time_test)
+
+    return Time, stage1, Max, Mean, Test_time
+
+def GSSA_country_hd(N=2, D_max=1):
+    '''
+    This function for high dimension calculation.
+    ------
+    Argument:
+        N(int):Number of countries. Default is 2
+        D_max(int):Number of maximum polynomial degree. Default is 1
+
+    ------
+    Output:
+        Time(list): List of run time for each polynominal in Stage 2.
+        stage1(float): Time for initial Monte Carol guess (Stage 1).
+        Max(list): List of maximum approximation errors for each polynominal.
+        Mean(list): List of mean approximation errors for each polynominal.
+        Test_time(list): List of time for testing accuracy.
+    '''
+    # All comments are similar following the original code
+
+
+    # User defined parameters
+    N = N
+    T = 2000
+    # Model parameters
+    gam = 1
+    alpha = 0.36
+    beta = 0.99
+    delta = 0.025
+    rho = 0.95
+    sigma = 0.01
+    # Variance-covariance matrix
+    vcv = sigma**(2)*(np.eye(N)+ np.ones(N))
+    # Normalising constant
+    A = (1-beta+beta*delta)/alpha/beta
+    # welfare weight
+    tau = 1
+    #The above normalization ensures that steady state
+    k = np.ones((T+1,N))
+    a = np.ones((1,N))
+
+
+    if N<=10:
+        real_path= os.path.join(os.getcwd(), "data\\")
+        a20200 = scipy.io.loadmat(real_path+r"aT20200N10.mat").get("a20200")
+        a20200 = a20200[:T, :N]
+    else:
+        #construct productivity levels
+        a20200 = Productivity(T,N,a,sigma,rho)
+    
+    ############################
+    #GSSA stage 1: Initial guess
+    ############################
 
     start = time.time()
     kdamp = 0.1
@@ -637,25 +890,23 @@ def GSSA_country_showcase():
     stage1 = end-start
 
     #################################
-    #GSSA Stage 2
+    #GSSA Stage 1: Updating the guess
     ################################
-    #Compute polynomial solutions of the degrees from one to D_max using one of the following integration methods: Monte Carlo, Gauss-Hermite product and monomial non-product methods
 
-
-    #Damping parameter for (fixed-point) iteration on the coefficients of the capital policy functions
+    # Damping parameter for (fixed-point) iteration on the coefficients of the capital policy functions
     kdamp     = 0.1
     #Set the initial difference between the series from two iterations in the convergence criterion   
     #dif_GSSA_D  = 1e+10
 
-    #The matrix of the polynomial coefficients
-    D_max = 5
+    # The matrix of the polynomial coefficients
+    D_max = D_max
 
     #construct container
     npol = np.empty((1,D_max))
 
     for i in range(1, D_max+1):
         npol[0,i-1]= Ord_Polynomial_N(np.hstack((k[0],a20200[0]))[np.newaxis,], i).shape[1]
-    #Choose an integration method here
+    # Choose an integration method here
     ###add more comments here
     IM = 11
 
@@ -669,20 +920,18 @@ def GSSA_country_showcase():
 
     #14. Choose a regression method and specifications
     #####only 6 methods avaliable here !!!!####
-    #-----------------------------------------
     RM    = 5       
     normalize = 1
     penalty = 7 
 
-    #Compute the polynomial solutions of the degrees from one to D_max
-    #---------------------------------------------------------------
+    
     #Construct empty container for results
     Time = []
     BK = []
-
+    #Compute the polynomial solutions of the degrees from one to D_max
     for D in range(1, D_max+1):
         start = time.time()
-        # 15.1 Using the previously computed capital series, compute the initial 
+        # Using the previously computed capital series, compute the initial 
         # guess on the coefficients under the  selected approximation method
         X = Ord_Polynomial_N(np.hstack((k[:T,:],a20200[:T,:])),D)
         bk_D = Num_Stab_Approx(X[:T-1,:],Y[:T-1,:], RM, penalty, normalize)
@@ -698,7 +947,7 @@ def GSSA_country_showcase():
                 k[i,] = X[i-1,][np.newaxis,]@bk_D
             
             X = np.nan_to_num(X)
-            #15.2.2Compute consumption series of all countries:
+            # Compute consumption series of all countries:
             ###################################################
             # N current capital stocks  
             k0 = k[0:T,]
@@ -712,19 +961,19 @@ def GSSA_country_showcase():
             # Individual consumption is the same for all countries, check JMM (2011)
             c = C@np.ones((1,N))/N
 
-            #15.2.3 Approximate the conditional expectations for t=1,...T-1 using the integration method chosen
+            # Approximate the conditional expectations for t=1,...T-1 using the integration method chosen
 
-            #15.2.3.1 The one-node Monte Carlo integration method approximates the 
-            #values of the conditional expectations, Y, in the Euler equation with
+            # The one-node Monte Carlo integration method approximates the 
+            # values of the conditional expectations, Y, in the Euler equation with
             # the realization of the integrand in the next period
             if IM == 0:
                 for i in range(1, N+1):
                     Y[0:T-1,i-1][:,np.newaxis] = beta*c[1:T,i-1][:,np.newaxis]**(-gam)/c[0:T-1, i-1][:,np.newaxis]**(-gam)*(1-delta+alpha*A*k[1:T,i-1][:,np.newaxis]**(alpha-1)*a20200[1:T,i-1][:,np.newaxis])*k[1:T,i-1][:,np.newaxis]
 
                 Y = np.nan_to_num(Y)
-            # 15.2.3.2 Deterministic integration methods approximate the values of 
+            #  Deterministic integration methods approximate the values of 
             # conditional expectations, Y, in the Euler equation as a weighted average 
-# of the values of the integrand in the given nodes with the given weights 
+            # of the values of the integrand in the given nodes with the given weights 
             else:
                 Y = np.zeros((T,N))
                 for i in range(1, n_nodes+1):
@@ -743,58 +992,62 @@ def GSSA_country_showcase():
                         Y[0:T,i-1][:,np.newaxis]= Y[0:T,i-1][:,np.newaxis]+ weight_nodes[i-1, 0]*beta*c1[0:T, i-1][:,np.newaxis]**(-gam)/c[0:T,i-1][:,np.newaxis]**(-gam)*(1-delta+alpha*A*k1[0:T,i-1][:,np.newaxis]**(alpha-1)*a1[0:T,i-1][:,np.newaxis])*k1[0:T, i-1][:,np.newaxis]
 
                 Y = np.nan_to_num(Y)
-            # 15.2.4 Evaluate the percentage (unit-free) difference between the 
+            # Evaluate the percentage (unit-free) difference between the 
             # capital series from the previous and current iterations
             #-------------------------------------------------------
             dif_GSSA_D = np.mean(abs(1-k/k_old))
 
-            # 15.2.5 Compute and update the coefficients of the capital policy 
-            # functions 
-            # ----------------------------------------------------------------
+            # Compute and update the coefficients of the capital policy functions 
+
             # Compute new coefficients of the capital 
             # policy functions using the chosen 
             # approximation method
             bk_hat_D = Num_Stab_Approx(X[0:T-1,:], Y[0:T-1,:], RM, penalty, normalize)
             bk_D = kdamp*bk_hat_D+ (1-kdamp)*bk_D
 
-            #15.2.6 Store the capital series 
-            #--------------------------------
+            # Store the capital series 
             k_old = k.copy()
 
-        #15.2.7 The GSSA output for the polynomial solution of degree D
+        # The GSSA output for the polynomial solution of degree D
         end = time.time()
         BK.append(bk_D)
         Time.append(end-start)
 
-    ####################################################################################
-    #GSSA accuracy
-    ####################################################################################
-    #Choose the simulation length for the test on a stochastic simulation, T_test<=10,200
+    #############
+    #GSSA stage 2
+    #############
+    # Choose the simulation length for the test on a stochastic simulation, T_test<=10,200
     T_test = 10200
-    a20200 = scipy.io.loadmat("aT20200N10.mat").get("a20200")
+    if N<=10:
+        real_path= os.path.join(os.getcwd(), "data\\")
+        a20200 = scipy.io.loadmat(real_path+r"aT20200N10.mat").get("a20200")
+        a20200 = a20200[:T, :N]
+    else:
+        #construct productivity levels
+        a20200 = Productivity(T_test,N,a,sigma,rho)
 
-    #Restrict the series of the productivity levels for the test on a stochastics
-    a_test = a20200[T:T+T_test,0:N]
+    # Restrict the series of the productivity levels for the test
+    a_test = a20200[:T_test,:N]
 
-    #16.2 Choose an integration method for evaluating accuracy of solutions
+    # Choose an integration method for evaluating accuracy of solutions
     IM_test = 11
 
-    #16.3 Compute errors on a stochastic simulation for the GSSA polynomial solution of degrees D=1,...,D_max
+    # Compute errors on a stochastic simulation for the GSSA polynomial solution of degrees D=1,...,D_max
     Max = []
     Mean = []
     Test_time = []
     for D in range(1, D_max+1):
-        #16.3.1 Simulate the time series solution under the given capital-
+        # Simulate the time series solution under the given capital-
         # policy-function coefficients, BK(:,:,D) with D=1,...,D_max 
         bk = BK[D-1]
-        #Initial condition for capital (equal to steady state)
+        # Initial condition for capital (equal to steady state)
         k_test = np.ones((1,N))
 
         for j in range(1, T_test):
             X_test = Ord_Polynomial_N(np.hstack((k_test[j-1][np.newaxis,],a_test[j-1,][np.newaxis,])), D)
             k_test = np.vstack((k_test, X_test@bk))
     
-        #16.3.2 Errors across 10,000 points on a stochastic simulation
+        # Errors across 10,000 points on a stochastic simulation
         discard = 200
         Errors_mean, Errors_max, time_test = Accuracy_Test_N(k_test, a_test, bk, D, IM_test, alpha, gam, delta, beta, A, tau, rho, vcv, discard)
         Max.append(Errors_max)
@@ -802,3 +1055,53 @@ def GSSA_country_showcase():
         Test_time.append(time_test)
 
     return Time, stage1, Max, Mean, Test_time
+
+
+def GSSA_country_df(N=2, Cache=True):
+    '''
+    This function prepares a dataframe for result showcasing.
+    ------
+    Argument:
+        N(int): Number of countries. Default is 2
+        Cache(boolean): Cache the result or not. Default is True.
+    ------
+    Output:
+        df(pandas DF): the result of 
+    '''
+    if ((N==1)&(Cache==True)):
+        real_path= os.path.join(os.getcwd(), "cache\\")
+        df = pd.read_csv(real_path+ r"countries_1.csv")
+    elif ((N==2)&(Cache==True)):
+        real_path= os.path.join(os.getcwd(), "cache\\")
+        df = pd.read_csv(real_path+ r"countries_2.csv")
+    
+    elif N<=2:
+        Time, stage1, Max, Mean, Test_time = GSSA_country(N=N)
+        # DF for the results
+        df = pd.DataFrame({"Polynomial Degree":[i for i in range(1,6)],
+            "Mean Error":Mean,
+            "Max Error":Max,
+            "Total Time":[Time[i]+stage1+Test_time[i] for i in range(5)],
+            "Number of countries":str(N)
+            })
+    elif ((N>2)&(N<=10)):
+        Time, stage1, Max, Mean, Test_time = GSSA_country_hd(N=N,D_max=2)
+        # DF for the results
+        df = pd.DataFrame({"Polynomial Degree":[i for i in range(1,3)],
+            "Mean Error":Mean,
+            "Max Error":Max,
+            "Total Time":[Time[i]+stage1+Test_time[i] for i in range(2)],
+            "Number of countries":str(N)
+            })
+
+    else:
+        Time, stage1, Max, Mean, Test_time = GSSA_country_hd(N=N,D_max=1)
+        # DF for the results
+        df = pd.DataFrame({"Polynomial Degree":[i for i in range(1,2)],
+            "Mean Error":Mean,
+            "Max Error":Max,
+            "Total Time":[Time[i]+stage1+Test_time[i] for i in range(1)],
+            "Number of countries":str(N)
+            })
+
+    return df

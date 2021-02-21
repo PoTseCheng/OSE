@@ -3,26 +3,22 @@ import pandas as pd
 import math
 import time
 import scipy.linalg
-from numpy.linalg import inv
-from numpy.linalg import svd
+from numpy.linalg import inv, svd
 from scipy.optimize import linprog
 from scipy.special import erfinv
+import scipy.io
 from numpy.random import rand
 from numpy import sqrt
+import os
 
 ##########################################
-#General information regarding this file
+# General information regarding this file
 ##########################################
-#Remark 1:
-#This is the python implementation for the paper "Numerically Stable and Accurate Stochastic Simulation Approaches
-#for Solving Dynamic Economic Models" by Kenneth L. Judd, Lilia Maliar and Serguei Maliar, (2011), henceforth JMM (2011)
-
-#Remark 2:
-#This file contains codes from my initial attemps of translating matlab codes from the original authors. 
-#These codes are therefore less stylish compared to the codes in country.py which were done in later stages.
+# This is the python implementation for the paper "Numerically Stable and Accurate Stochastic Simulation Approaches
+# for Solving Dynamic Economic Models" by Kenneth L. Judd, Lilia Maliar and Serguei Maliar, (2011), henceforth JMM (2011)
 
 
-def randn2(*args,**kwargs):
+def randn2(*args, **kwargs):
     '''
     The randn function that matlab uses.
     ------
@@ -41,16 +37,17 @@ def reading(x):
     Returns:
         df(Pandas dataframe)
     '''
-    df=pd.read_csv(x)
-    add=df.columns.tolist()
+    df = pd.read_csv(x)
+    add = df.columns.tolist()
     df.loc[-1] = add 
     df.index = df.index + 1  
     df = df.sort_index()
-    df.columns=[x.replace(".csv","")]
+    df.columns = [x.replace(".csv","")]
 
     return df
 
-def Ord_Herm_Pol_1(z,D,PF,zb):
+
+def Ord_Herm_Pol_1(z, D, PF, zb):
     '''
     The function constructs the basis functions of complete ordinary and Hermite polynomials of the degrees from one to five for the two-dimensional (two-state variables) cases.
     ----------
@@ -85,8 +82,10 @@ def Ord_Herm_Pol_1(z,D,PF,zb):
     
     # If the polynomial family chosen is ordinary##
     else:
-        zc1 = z[:, 0] # No normalization
-        zc2 = z[:, 1] # No normalization
+        # No normalization
+        zc1 = z[:, 0] 
+        # No normalization
+        zc2 = z[:, 1] 
         #p1,...,p5 are the vectors obtained by evaluating the ordinary
         p1 = zc1
         p2 = np.power(zc1, 2)
@@ -167,7 +166,8 @@ def Ord_Herm_Pol_1(z,D,PF,zb):
     
     return basis
 
-def Num_Stab_Approx(x,y,RM,penalty,normalised):
+
+def Num_Stab_Approx(x, y, RM, penalty,normalised):
     '''
     This function implements the approximation methods mentioned in Judd et al. (2011)
     
@@ -190,26 +190,28 @@ def Num_Stab_Approx(x,y,RM,penalty,normalised):
     '''
 
     # Step 1: Compute the dimensionality of the data
-    #-------------------------------------------------
+    # -------------------------------------------------
     T = x.shape[0]
     n = x.shape[1]
     N = y.shape[1] 
 
     # Step 2: Normalisation
-    #----------------------------------
+    # ----------------------------------
     if ((normalised == 1) or (RM >= 5)):
         X1 = np.divide(
-            (x[:,1:n] - np.matmul(np.ones((T, 1)), x[:,1:n].mean(axis=0).reshape(1, n-1))),
-            np.matmul(np.ones((T, 1)), np.array([np.std(x[:,i], ddof=1) for i in range(1,n)]).reshape(1,n-1))
+            (x[:, 1:n] - np.matmul(np.ones((T, 1)), x[:, 1:n].mean(axis=0).reshape(1, n-1))),
+            np.matmul(np.ones((T, 1)), np.array([np.std(x[:, i], ddof=1) for i in range(1, n)]).reshape(1, n-1))
         )
         X1 = X1.astype(float)
     
         Y1 = np.divide(
-            (y - np.ones((T,1))*np.mean(y)),
-            np.matmul(np.ones((T,1)), np.std(y, ddof=1).reshape(1,1))
+            (y - np.ones((T, 1))*np.mean(y)),
+            np.matmul(np.ones((T, 1)), np.std(y, ddof=1).reshape(1, 1))
             )
         Y1 = Y1.astype(float)
-        n1 = n-1 # Number of coefficients in a regression with normalized data is reduced by 1 (no intercept)
+        # Number of coefficients in a regression with normalised data 
+        # is reduced by 1
+        n1 = n-1
     else:
         # Leave the values without any changes
         X1 = x
@@ -217,7 +219,7 @@ def Num_Stab_Approx(x,y,RM,penalty,normalised):
         n1 = n
     
     # Step 3: choosing an approximate method from the paper
-    #------------------------------------------------------
+    # ------------------------------------------------------
 
     # Simple OLS
     if RM == 1:
@@ -230,33 +232,34 @@ def Num_Stab_Approx(x,y,RM,penalty,normalised):
         S_inv = np.diag(1/S)
         B = V@S_inv@U.conj().T@Y1
     
-    #LAD-PP
+    # LAD-PP
     elif RM == 3:
         BND = [(-100, 100)]*n1 + [(0, None)]*2*T
-        f = np.vstack((np.zeros((n1,1)), np.ones((2*T,1))))
+        f = np.vstack((np.zeros((n1, 1)), np.ones((2*T, 1))))
         Aeq = np.concatenate((X1, np.eye(T), -np.eye(T)), axis=1)
-        B =[]
+        B = []
         # Solve the equation
         for i in range(N):
             beq = Y1[:,i]
-            result = linprog(f, A_eq = Aeq, b_eq = beq, bounds= BND, method="highs-ipm")
+            result = linprog(f, A_eq=Aeq, b_eq=beq, bounds=BND, method="highs-ipm")
             # do not change the method here, or else will result in memory overload
             B.append(list(result.x[0:n1]))
         B = np.asarray(B).T
     
-    #LAD-DP (This method is unavaliable)
+    # LAD-DP (This method is unavaliable)
     elif RM == 4:
         BND = [(-1, 1)]*T
-        #, bounds= BND
-        f = -Y1[:,0]
-        #specify the Aeq an beq
+        # bounds= BND
+        f = -Y1[:, 0]
+        # specify the Aeq an beq
         Aeq = X1.conj().transpose()
-        B =[]
-        #solve the equation
+        B = []
+        # solve the equation
         beq = np.asarray([0]*n1)
-        result = linprog(f, A_eq = Aeq, b_eq = beq, bounds= BND, method="highs-ipm")
+        result = linprog(f, A_eq=Aeq, b_eq=beq, bounds=BND, method="highs-ipm")
         B.append(result.x[0:n1])
-    #####Despite we can get an answer from Scipy, this is not the answer we want, as we want the lagrange multiplier for coefficient
+    # Despite we can get an answer from Scipy, this is not the answer we want, 
+    # as we want the lagrange multiplier for coefficient
     
     # RLS-Tikhonov
     elif RM == 5:
@@ -266,34 +269,34 @@ def Num_Stab_Approx(x,y,RM,penalty,normalised):
     elif RM == 6:
         U, S, Vh = svd(X1, full_matrices=False)
         V = Vh.T
-        r = np.count_nonzero(np.divide(np.diag(S).max(), np.diag(S))<= 10**(penalty))
-        Sr_inv = np.zeros((n1,n1))
-        Sr_inv[0:r, 0:r]= np.diag(np.divide(1., S[:r]))
+        r = np.count_nonzero(np.divide(np.diag(S).max(), np.diag(S)) <= 10**(penalty))
+        Sr_inv = np.zeros((n1, n1))
+        Sr_inv[0:r, 0:r] = np.diag(np.divide(1., S[:r]))
         B = V@Sr_inv@U.conj().T@Y1
 
-    #LADPP
+    # LADPP
     elif RM == 7:
-        #we can just use the default setting from scipy as the lower and upper will be the same
-        f= np.vstack((10**penalty*np.ones((n1*2,1))*T/n1, np.ones((2*T,1))))
-        Aeq= np.c_[X1,-X1, np.eye(T), -np.eye(T)]
-        B =[]
-        #solve the equation
+        # we can just use the default setting from scipy as the lower and upper will be the same
+        f = np.vstack((10**penalty*np.ones((n1*2, 1))*T/n1, np.ones((2*T, 1))))
+        Aeq = np.c_[X1, -X1, np.eye(T), -np.eye(T)]
+        B = []
+        # solve the equation
         for i in range(N):
-            beq = Y1[:,i]
-            result = linprog(f, A_eq = Aeq, b_eq = beq, method="highs-ipm")
+            beq = Y1[:, i]
+            result = linprog(f, A_eq=Aeq, b_eq=beq, method="highs-ipm")
             B.append(list(result.x[0:n1]-result.x[n1:2*n1]))
         B = np.asarray(B).T
 
-    #RM == 8 is unavaliable(see notebook)
+    # RM == 8 is unavaliable(see notebook)
 
-    #Step 4: Infer the regression coefficients in the original regression with unnormalised data
-    #-----------------------------------------------------------------------------------------
+    # Step 4: Infer the regression coefficients in the original regression with unnormalised data
+    # -----------------------------------------------------------------------------------------
 
     if ((normalised == 1) or (RM >= 5)):
-        B2 = np.multiply((1/np.asarray([np.std(x[:,i], ddof=1) for i in range(1,n)])).reshape((n1,1))*np.std(y, ddof=1),B)
-        B1 = (y.mean()- np.matmul(np.asarray([x[:,i].mean() for i in range(1,n)]),B2)).reshape(1,1)
-        B = np.concatenate((B1,B2))
-    #The codes are improved greatly in the implementation, see country.py
+        B2 = np.multiply((1/np.asarray([np.std(x[:, i], ddof=1) for i in range(1, n)])).reshape((n1, 1))*np.std(y, ddof=1), B)
+        B1 = (y.mean() - np.matmul(np.asarray([x[:, i].mean() for i in range(1, n)]), B2)).reshape(1, 1)
+        B = np.concatenate((B1, B2))
+    # The codes are improved greatly in the implementation, see country.py
     
     return B
 
@@ -319,7 +322,7 @@ def GH_Quadrature(Qn, N, vcv):
     # eps: Set of integration nodes
     # weight: Set of integration weights    
     if Qn == 1:
-        eps = np.zeros([1,1])
+        eps = np.zeros([1, 1])
         weight = math.sqrt(math.pi)   
     elif Qn == 2:
         eps = np.array([0.7071067811865475, -0.7071067811865475])
@@ -376,6 +379,13 @@ def GH_Quadrature(Qn, N, vcv):
 
 def Accuracy_Test_1(sigma,rho,beta,gam,alpha,delta,k,a,bk,D,IM,PF,zb,discard):
     '''
+    This is the main function for GSSA stage 2, which measures the error.
+    ------
+    Arguments:
+        todo
+    ----
+    Outputs:
+        todo
     '''
     start = time.time()
     n_nodes,epsi_nodes, weight_nodes = GH_Quadrature(Qn=IM, N=1, vcv=sigma**2)
@@ -400,7 +410,7 @@ def Accuracy_Test_1(sigma,rho,beta,gam,alpha,delta,k,a,bk,D,IM,PF,zb,discard):
 
 def GSSA_main_cycle(T, gam, alpha, beta, delta, kdamp, dif_GSSA_1d, a, bk_1d, k_old, k, checker = 0):
     '''
-    Stage 1 of 1 agent model
+    Stage 1 of 1 agent model for initial guessing.
     --------------
     Parameters:
         T (int): Simulation point
@@ -454,7 +464,7 @@ def GSSA_main_cycle(T, gam, alpha, beta, delta, kdamp, dif_GSSA_1d, a, bk_1d, k_
 
 def GSSA_poly(T, a, z, d, PF, zb, RM, penalty, normalize, dif_GSSA_D, kdamp, alpha, beta, delta, k, gam, y, k_old, a1, IM, n_nodes, weight_nodes, checker = 0):
     '''
-    Stage 2 of 1 agent GSSA.
+    Stage 1 of 1 agent GSSA by using the initial guess for other RM and polynominal.
     ---------
     Parameters:
         T(int): Simulation points
@@ -551,17 +561,24 @@ def GSSA_ShowcaseResult():
     Output:
     showcase_result(Pandas Dataframe)
     '''
-    ############################################
     #Roadmap of GSSA:
-    #
-
     ############################################
+    # Initialisation
+    # GSSA stage 1: First guess
+    # GSSA stage 1: Updating First Guess
+    # GSSA stage 2
+    ############################################
+    
+    ################
+    # Initialisation
+    ################
 
     #We wont be simulating any data, we will use the data provided to ensure the result
-    df =reading("epsi10000.csv")
+    real_path= os.path.join(os.getcwd(), "data\\")
+    epsi_pre = scipy.io.loadmat(real_path+r"epsi10000.mat").get("epsi10000")
+    df = pd.DataFrame(epsi_pre)
 
-    #1. Choose the simulation length
-    #--------------------------------
+    
 
     #Choose the simulation length for the solution procedure, T<=10,000
     T  = 10000
@@ -597,43 +614,54 @@ def GSSA_ShowcaseResult():
     bk_1d  = np.array([0., 0.95, ks*0.05])
     bk_1d= np.reshape(bk_1d, (3,1))
     k_old = [ks+1]*(T+1)
-    #GSSA stage 1 Initial guess by implementing the Monte Carlo simulation
+
+    ###########################
+    # GSSA stage 1: First guess
+    ###########################
     start = time.time()
     y= GSSA_main_cycle(T, gam, alpha, beta, delta, kdamp, dif_GSSA_1d, a, bk_1d, k_old, k)
     end = time.time()
     elapsed_time = end-start
-    y = y.reshape((y.shape[0],1)) #make sure y is in the right shape
-    #The GSSA parameters
+    y = y.reshape((y.shape[0],1)) 
+
+    ####################
+    #GSSA stage 1: Updating first guess
+    ####################
+
+    # The GSSA parameters
     kdamp = 0.1
     dif_GSSA_D = 1e+10
-    #The matrices of the polynomial coefficients
-    D_max  = 5 #because of python
+    # The matrices of the polynomial coefficients
+    D_max  = 5 
     npol = np.array([3, 6, 10, 15, 21])
 
     # 13. Choose an integration method for computing solutions  
     IM  = 10
     n_nodes,epsi_nodes, weight_nodes= GH_Quadrature(IM, N=1, vcv=sigma**2)
 
-    #make sure to change a into the right shape
+    # make sure to change a into the right shape
     a = np.reshape(a, (T, 1))
     a1 = np.matmul(np.power(a,rho), np.exp(epsi_nodes.transpose()))
 
-    #14. Choose a regression specification 
-    RM = 6           # Choose a regression method: 
-                 # 1=OLS,          2=LS-SVD,   3=LAD-PP,  4=LAD-DP, 
-                 # 5=RLS-Tikhonov, 6=RLS-TSVD, 7=RLAD-PP, 8=RLAD-DP
-    normalize = 1    # Option of normalizing the data; 0=unnormalized data; 
-                 # 1=normalized data                    
-    penalty = 7      # Degree of regularization for a regularization methods, 
-                 # RM=5,6,7,8 (must be negative, e.g., -7 for RM=5,7,8 
-                 # and must be positive, e.g., 7, for RM=6)
-    PF = 0           # Choose a polynomial family; 0=Ordinary (default); # 1=Hermite
+    #14. Choose a regression specification
+
+    # Choose a regression method: 
+    # 1=OLS,          2=LS-SVD,   3=LAD-PP,  4=LAD-DP, 
+    # 5=RLS-Tikhonov, 6=RLS-TSVD, 7=RLAD-PP
+    RM = 6     
+    # Option of normalizing the data: 0=unnormalized data; 
+    # 1=normalized data        
+    normalize = 1 
+    # Degree of regularization for a regularization methods, 
+    # RM=5,6,7,8 (must be negative, e.g., -7 for RM=5,7,8 
+    # and must be positive, e.g., 7, for RM=6)                     
+    penalty = 7     
+    # Choose a polynomial family; 0=Ordinary (default); # 1=Hermite 
+    PF = 0           
     # 15. Initialize the capital series
     zb = np.matrix([[np.mean(k[0:T]), np.mean(a[0:T])], [np.std(k[0:T]), np.std(a[0:T])]])
     z = np.concatenate((k[0:T].reshape(T,1), a[0:T].reshape(T,1)), axis=1)
     k_old = [ks+1]*(T+1)
-
-    #
     BK = []
     Time = []
     for d in range(1, D_max+1):
@@ -641,13 +669,16 @@ def GSSA_ShowcaseResult():
         BK.append(GSSA_poly(T, a, z, d, PF, zb, RM, penalty, normalize, dif_GSSA_D, kdamp, alpha, beta, delta, k, gam, y, k_old, a1, IM, n_nodes, weight_nodes, checker= 0))
         end = time.time()
         Time.append(end-start)
-    #Accuracy test:
+
+    ###################################   
+    # Stage 2 of GSSA
+    ###################################
 
     # we also will also just use the given data the authors generated
-    # Notice for the real simulation we will differ from here
+    # Notice for the real simulation we can differ from here by using rang
     T_test = 10200
-    df =reading("epsi_test.csv")
-    epsi_test = sigma*df.to_numpy().astype(float)
+    epsi_t = scipy.io.loadmat(real_path+r"epsi_test.mat").get("epsi_test")
+    epsi_test = sigma*epsi_t
     a_test = [1]
     for i in range(1,T_test):
         value = a_test[i-1]**(rho)*math.exp(float(epsi_test[i]))
@@ -664,7 +695,7 @@ def GSSA_ShowcaseResult():
         #refressing k_test to make sure that k_test is always 10200
         #k_test = [ks]
         for i in range(T_test):
-            X_test = Ord_Herm_Pol_1(np.array([k_test[i], a_test[i]]).reshape([1,2]),d,PF,zb) # D = 1 for now, we will plug this in another for loop
+            X_test = Ord_Herm_Pol_1(np.array([k_test[i], a_test[i]]).reshape([1,2]),d,PF,zb) 
             value = float(np.matmul(X_test, BK[d-1]))
             k_test.append(value)
 
@@ -692,7 +723,7 @@ def GSSA_ShowcaseResult():
 
 def GSSA_1_agent(T=3000, T_test=10000, D_max=5, IM=10, RM=6 ,normalize=1, penalty=7, PF=0):
     '''
-    This is a modified version of the showcase code, notice that the total simulations are unified to 3000 following JMM (2011).
+    This is a modified version of the showcase code, notice that the total simulations are unified to 3000.
     --------
     Arguments:
         T(int): Number of simulations. Default is 3000.
@@ -756,8 +787,9 @@ def GSSA_1_agent(T=3000, T_test=10000, D_max=5, IM=10, RM=6 ,normalize=1, penalt
     y = y.reshape((y.shape[0],1))
 
     ####################
-    #GSSA stage 2
+    #GSSA stage 1: Updating first guess
     ####################
+
     #The GSSA parameters
     kdamp = 0.1
     dif_GSSA_D = 1e+10
@@ -791,7 +823,7 @@ def GSSA_1_agent(T=3000, T_test=10000, D_max=5, IM=10, RM=6 ,normalize=1, penalt
     #Accuracy testing
     ########################
     T_test = 10000
-    np.random.seed(100)
+    np.random.seed(123)
     df_prep = randn2(T_test)
     df = pd.DataFrame(df_prep)
     epsi_test = sigma*df.to_numpy().astype(float)
@@ -819,3 +851,266 @@ def GSSA_1_agent(T=3000, T_test=10000, D_max=5, IM=10, RM=6 ,normalize=1, penalt
         result_time.append(error_time)
     
     return result_max, result_mean, error_time, Time, stage1_time
+
+def Result_agent(cache=True):
+    '''
+    The function that returns different results by changing integration methods, regression methods, and also different polynomials
+    -----
+    Argument:
+        cache(binary):Determine using the cached result or not. Default is true.
+    
+    -----
+    Output:
+        result1(pandas DF):Documenting results with OLS and regularised OLS.
+        result2(pandas DF):Documenting results with LS-SVD and regularised LS-SVD
+        result3(pandas DF):Documenting results with LAD-PP and regularised LAD-PP
+        
+    
+    -----
+    Notice:
+        I strongly recommend leaving the cache argument to true, as the calculation will take quite a while.
+    '''
+    if cache==False:
+        real_path= os.path.join(os.getcwd(), "cache\\")
+        # IM = one node MC only
+        # RM = OLS
+        # without normalisation
+        max_1_0, mean_1_0, error_time_1_0, Time_1_0, stage1_time_1_0 = GSSA_1_agent(D_max=2, IM=0, RM=1 ,normalize=0, penalty=3, PF=0)
+
+        # The stability cannot be achieve with polynominal degree higher than 2
+        mean_1_0 = mean_1_0 + [0,0,0]
+        Time_1_0 = Time_1_0 + [0,0,0]
+        max_1_0 = max_1_0 + [0,0,0]
+
+        # IM = one node MC only
+        # RM = OLS
+        # With normalisation
+        max_1_1, mean_1_1, error_time_1_1, Time_1_1, stage1_time_1_1 = GSSA_1_agent(D_max=3, IM=0, RM=1,normalize=1, penalty=3, PF=0)
+
+        # The stability cannot be achieve with polynominal degree higher than 3
+        mean_1_1 = mean_1_1 + [0,0]
+        Time_1_1 = Time_1_1 + [0,0]
+        max_1_1 = max_1_1 + [0,0]
+
+        # IM = one node MC only
+        # RM = OLS
+        # without normalisation with hermite
+        max_1_2, mean_1_2, error_time_1_2, Time_1_2, stage1_time_1_2 = GSSA_1_agent(D_max=5, IM=0, RM=1 ,normalize=0, penalty=3, PF=1)
+
+        # IM = one node MC only
+        # RM = RLS-Tikhonov
+        # Smaller regulation k = -7
+        max_5_0, mean_5_0, error_time_5_0, Time_5_0, stage1_time_5_0 = GSSA_1_agent(D_max=5, IM=5, RM=6 ,normalize=1, penalty=-6, PF=0)
+
+        # IM = one node MC only
+        # RM = RLS-Tikhonov
+        # Larger regulation k = -4
+        max_5_1, mean_5_1, error_time_5_1, Time_5_1, stage1_time_5_1 = GSSA_1_agent(D_max=5, IM=0, RM=6 ,normalize=1, penalty=-3, PF=0)
+
+        #Dataframe result1
+        df_0 = pd.DataFrame({"Polynomial Degree":[i for i in range(1,6)],
+        "Mean Error":mean_1_0,
+        "Max Error":max_1_0,
+        "Total Time":[Time_1_0[i]+stage1_time_1_0+error_time_1_0 for i in range(5)],
+        "Method": "Unnormalised OLS"
+        })
+
+        df_1 = pd.DataFrame({"Polynomial Degree":[i for i in range(1,6)],
+        "Mean Error":mean_1_1,
+        "Max Error":max_1_1,
+        "Total Time":[Time_1_1[i]+stage1_time_1_1+error_time_1_1 for i in range(5)],
+        "Method": "Normalised OLS"
+        })
+
+        df_2 = pd.DataFrame({"Polynomial Degree":[i for i in range(1,6)],
+        "Mean Error":mean_1_2,
+        "Max Error":max_1_2,
+        "Total Time":[Time_1_2[i]+stage1_time_1_2+error_time_1_2 for i in range(5)],
+        "Method": "Hermite OLS"
+        })
+
+        df_3 = pd.DataFrame({"Polynomial Degree":[i for i in range(1,6)],
+        "Mean Error":mean_5_0,
+        "Max Error":max_5_0,
+        "Total Time":[Time_5_0[i]+stage1_time_5_0+error_time_5_0 for i in range(5)],
+        "Method": "Smaller Regulation RLS-Tikhonov"
+        })
+
+        df_4 = pd.DataFrame({"Polynomial Degree":[i for i in range(1,6)],
+        "Mean Error":mean_5_1,
+        "Max Error":max_5_1,
+        "Total Time":[Time_5_1[i]+stage1_time_5_1+error_time_5_1 for i in range(5)],
+        "Method": "Larger Regulation RLS-Tikhonov"
+        })
+
+        result1 = pd.concat([df_0, df_1, df_2, df_3, df_4])
+
+        # Caching the result
+        result1.to_csv(real_path+ r"result_1.csv", encoding='utf-8', index=False)
+
+        # IM = one node MC only
+        # RM = LS-SVD
+        # without normalisation
+        max_2_0, mean_2_0, error_time_2_0, Time_2_0, stage1_time_2_0 = GSSA_1_agent(D_max=4, IM=0, RM=2 ,normalize=0, penalty=3, PF=0)
+
+        # The stability cannot be achieve with polynominal degree higher than 4
+        mean_2_0.append(0)
+        Time_2_0.append(0)
+        max_2_0.append(0)
+
+        # IM = one node MC only
+        # RM = LS-SVD
+        # with normalisation
+        max_2_1, mean_2_1, error_time_2_1, Time_2_1, stage1_time_2_1 = GSSA_1_agent(D_max=5, IM=0, RM=2,normalize=1, penalty=3, PF=0)
+
+        # IM = one node MC only
+        # RM = LS-SVD
+        # without normalisation with hermite
+        max_2_2, mean_2_2, error_time_2_2, Time_2_2, stage1_time_2_2 = GSSA_1_agent(D_max=5, IM=0, RM=2 ,normalize=0, penalty=3, PF=1)
+
+        # Notice it doesnt matter after RM=4 if the data is normalised or not, it will get normalised as long as RM >=5
+
+        # IM = one node MC only
+        # RM = RLS-TSVD
+        # Smaller regulation k = 8
+        max_6_0, mean_6_0, error_time_6_0, Time_6_0, stage1_time_6_0 = GSSA_1_agent(D_max=5, IM=0, RM=6 ,normalize=1, penalty=8, PF=0)
+
+        # IM = one node MC only
+        # RM = RLS-TSVD
+        # Larger regulation k = 6
+        max_6_1, mean_6_1, error_time_6_1, Time_6_1, stage1_time_6_1 = GSSA_1_agent(D_max=5, IM=0, RM=6 ,normalize=1, penalty=6, PF=0)
+
+        # IM = one node MC only
+        # RM = RLS-TSVD
+        # Hermite
+        max_6_2, mean_6_2, error_time_6_2, Time_6_2, stage1_time_6_2 = GSSA_1_agent(D_max=5, IM=0, RM=6,normalize=1, penalty=7, PF=1)
+
+        #Dataframe result2
+        df_0 = pd.DataFrame({"Polynomial Degree":[i for i in range(1,6)],
+        "Mean Error":mean_2_0,
+        "Max Error":max_2_0,
+        "Total Time":[Time_2_0[i]+stage1_time_2_0+error_time_2_0 for i in range(5)],
+        "Method": "Unnormalised LS-SVD"
+        })
+
+        df_1 = pd.DataFrame({"Polynomial Degree":[i for i in range(1,6)],
+        "Mean Error":mean_2_1,
+        "Max Error":max_2_1,
+        "Total Time":[Time_2_1[i]+stage1_time_2_1+error_time_2_1 for i in range(5)],
+        "Method": "Normalised LS-SVD"
+        })
+
+        df_2 = pd.DataFrame({"Polynomial Degree":[i for i in range(1,6)],
+        "Mean Error":mean_2_2,
+        "Max Error":max_2_2,
+        "Total Time":[Time_2_2[i]+stage1_time_2_1+error_time_2_1 for i in range(5)],
+        "Method": "Hermite LS-SVD"
+        })
+
+        df_3 = pd.DataFrame({"Polynomial Degree":[i for i in range(1,6)],
+        "Mean Error":mean_6_0,
+        "Max Error":max_6_0,
+        "Total Time":[Time_6_0[i]+stage1_time_6_0+error_time_6_0 for i in range(5)],
+        "Method": "Smaller Regulation RLS"
+        })
+
+        df_4 = pd.DataFrame({"Polynomial Degree":[i for i in range(1,6)],
+        "Mean Error":mean_6_1,
+        "Max Error":max_6_1,
+        "Total Time":[Time_6_1[i]+stage1_time_6_1+error_time_6_1 for i in range(5)],
+        "Method": "Larger Regulation RLS-TSVD"
+        })
+
+        result2 = pd.concat([df_0, df_1, df_2, df_3, df_4])
+
+        # Make sure the time for unnormalised LS-SVD is not considered
+        result2.iloc[4,3]= 0
+
+        # Caching the result
+        result2.to_csv(real_path+ r"result_2.csv", encoding='utf-8', index=False)
+
+        # IM = one node MC only
+        # RM = LAD-PP
+        # without normalisation
+        max_3_0, mean_3_0, error_time_3_0, Time_3_0, stage1_time_3_0 = GSSA_1_agent(D_max=4, IM=0, RM=3,normalize=0, penalty=3, PF=0)
+
+        # The stability cannot be achieve with polynominal degree higher than 4
+        mean_3_0.append(0)
+        Time_3_0.append(0)
+        max_3_0.append(0)
+
+        # IM = one node MC only
+        # RM = LAD-PP
+        # with normalisation
+        max_3_1, mean_3_1, error_time_3_1, Time_3_1, stage1_time_3_1 = GSSA_1_agent(D_max=4, IM=0, RM=3,normalize=1, penalty=3, PF=0)
+        
+        # The stability cost is too high, which is more than 10000 seconds
+        mean_3_1.append(0)
+        Time_3_1.append(0)
+        max_3_1.append(0)
+
+        # IM = one node MC only
+        # RM = LAD-PP
+        # without normalisation with hermite
+        max_3_2, mean_3_2, error_time_3_2, Time_3_2, stage1_time_3_2 = GSSA_1_agent(D_max=5, IM=0, RM=3,normalize=0, penalty=3, PF=1)
+
+
+        # IM = one node MC only
+        # RM = RLAD-PP
+        # Smaller regulation k = -4
+        max_7_0, mean_7_0, error_time_7_0, Time_7_0, stage1_time_7_0 = GSSA_1_agent(D_max=5, IM=0, RM=7,normalize=1, penalty=-4, PF=0)
+
+        # IM = one node MC only
+        # RM = RLAD-PP
+        # Larger regulation k = -2
+        max_7_1, mean_7_1, error_time_7_1, Time_7_1, stage1_time_7_1 = GSSA_1_agent(D_max=5, IM=0, RM=7,normalize=1, penalty=-2, PF=0)
+
+        #   Dataframe result 3
+        df_0 = pd.DataFrame({"Polynomial Degree":[i for i in range(1,6)],
+        "Mean Error":mean_3_0,
+        "Max Error":max_3_0,
+        "Total Time":[Time_3_0[i]+stage1_time_3_0+error_time_3_0 for i in range(5)],
+        "Method": "Unnormalised LAD-PP"
+        })
+
+        df_1 = pd.DataFrame({"Polynomial Degree":[i for i in range(1,6)],
+        "Mean Error":mean_3_1,
+        "Max Error":max_3_1,
+        "Total Time":[Time_3_1[i]+stage1_time_3_1+error_time_3_1 for i in range(5)],
+        "Method": "Normalised LAD-PP"
+        })
+
+        df_2 = pd.DataFrame({"Polynomial Degree":[i for i in range(1,6)],
+        "Mean Error":mean_3_2,
+        "Max Error":max_3_2,
+        "Total Time":[Time_3_2[i]+stage1_time_3_1+error_time_3_1 for i in range(5)],
+        "Method": "Hermite LAD-PP"
+        })
+
+        df_3 = pd.DataFrame({"Polynomial Degree":[i for i in range(1,6)],
+        "Mean Error":mean_7_0,
+        "Max Error":max_7_0,
+        "Total Time":[Time_7_0[i]+stage1_time_7_0+error_time_7_0 for i in range(5)],
+        "Method": "Smaller Regulation RLAD-PP"
+        })
+
+        df_4 = pd.DataFrame({"Polynomial Degree":[i for i in range(1,6)],
+        "Mean Error":mean_7_1,
+        "Max Error":max_7_1,
+        "Total Time":[Time_7_1[i]+stage1_time_7_1+error_time_7_1 for i in range(5)],
+        "Method": "Larger Regulation RLAD-PP"
+        })
+
+        result3 = pd.concat([df_0, df_1, df_2, df_3, df_4])
+
+        # Caching the result
+        result3.to_csv(real_path+ r"result_3.csv", encoding='utf-8', index=False)
+
+    # Use the cache version
+    else:
+        real_path= os.path.join(os.getcwd(), "cache\\")
+        result1 = pd.read_csv(real_path+ r"result_1.csv")
+        result2 = pd.read_csv(real_path+ r"result_2.csv")
+        result3 = pd.read_csv(real_path+ r"result_3.csv")
+    
+    return result1, result2, result3
