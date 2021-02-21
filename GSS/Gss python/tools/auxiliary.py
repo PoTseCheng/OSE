@@ -2,22 +2,29 @@ import pandas as pd
 import numpy as np 
 import seaborn as sns
 import matplotlib.pyplot as plt
+import os
+import scipy.io
 
 
 def Figure1():
     '''
     This function showcase the ergodic sets
     '''
-    df1 = pd.read_csv("country_k.csv")
-    df2 = pd.read_csv("aT20200N10.csv")
-    df1.drop(df1.tail(1).index, inplace=True)
-    df2 = df2.loc[:, :"country_2"]
+    # importing data
+    real_path= os.path.join(os.getcwd(), "data\\")
+    prep1 = scipy.io.loadmat(real_path+r"country_k.mat").get("k")
+    prep2 = scipy.io.loadmat(real_path+r"aT20200N10.mat").get("a20200")
+    df1 = pd.DataFrame(prep1)
+    df2 = pd.DataFrame(prep2)
+    # cleaning data
+    df1 = df1.iloc[:2000,:1]
+    df2 = df2.iloc[:, :1]
     df2 = df2.head(2000)
-    result1 = pd.concat([df1["country_1"], df2["country_1"]], axis=1)
-    result1.columns = ["Capital", "Productivity"]
-    result1["Country"] = "country 1"
-    Fig1 = sns.jointplot("Capital", "Productivity",data=result1, kind='hex')
-    Fig1.fig.suptitle("An example of ergodic set with closed-formed solution", fontsize=16)
+    result = pd.concat([df1[0], df2[0]], axis=1)
+    result.columns = ["Capital", "Productivity"]
+    # ploting
+    Fig1 = sns.jointplot("Capital", "Productivity",data=result, kind='hex')
+    Fig1.fig.suptitle("Ergodic set with closed-formed solution", fontsize=16)
     Fig1.fig.subplots_adjust(top=0.95)
     return
 
