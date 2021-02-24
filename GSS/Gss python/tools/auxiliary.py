@@ -4,6 +4,7 @@ import seaborn as sns
 import matplotlib.pyplot as plt
 import os
 import scipy.io
+from tools.GSSA_countries import GSSA_country_df
 
 
 def Figure1():
@@ -11,7 +12,7 @@ def Figure1():
     This function showcase the ergodic sets
     '''
     # importing data
-    real_path= os.path.join(os.getcwd(), "data\\")
+    real_path = os.path.join(os.getcwd(), "data\\")
     prep1 = scipy.io.loadmat(real_path+r"country_k.mat").get("k")
     prep2 = scipy.io.loadmat(real_path+r"aT20200N10.mat").get("a20200")
     df1 = pd.DataFrame(prep1)
@@ -89,7 +90,8 @@ def Figure2():
 
     # Show the plot
     plt.show()
-    return 
+    return
+
 
 def Figure3(showcase_result):
     '''
@@ -128,3 +130,24 @@ def Figure3(showcase_result):
     plt.show()
     return
 
+
+def country_Figure1():
+    '''
+    Produce figure for 1 and 2 countries with polynomial degree 1 to 5.
+    '''
+    countries_1 = GSSA_country_df(N=1, Cache=True)
+    countries_2 = GSSA_country_df(N=2, Cache=True)
+    countries_12 = pd.concat([countries_1, countries_2])
+    # Make sure data in the correct type
+    countries_12["Number of countries"] = countries_12["Number of countries"].astype(str)
+    # Plotting
+    fig, (ax0, ax1, ax2) = plt.subplots (1, 3, figsize=(15, 5))
+    fig.suptitle("Figure: Comparision between 1 and 2 countries", fontsize=16)
+    plt.subplots_adjust(wspace=0.4)
+    g = sns.barplot(x="Polynomial Degree", y="Total Time", hue="Number of countries", data=countries_12, palette="rocket_r", ax = ax0)
+    g = sns.barplot(x="Polynomial Degree", y="Max Error", hue="Number of countries", data=countries_12, palette="rocket_r", ax = ax1)
+    g.invert_yaxis()
+    g = sns.barplot(x="Polynomial Degree", y="Mean Error", hue="Number of countries", data=countries_12, palette="rocket_r", ax = ax2)
+    g.invert_yaxis()
+    plt.show()
+    return

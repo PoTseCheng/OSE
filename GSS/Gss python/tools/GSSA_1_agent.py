@@ -25,26 +25,6 @@ def randn2(*args, **kwargs):
     '''
     uniform = rand(*args, **kwargs)
     return sqrt(2) * erfinv(2 * uniform - 1)
- 
-
-def reading(x):
-    '''
-    Homemade reader for csv file produced by homemade converter.
-    --------
-    Parameters:
-        x(str):Csv file from converter
-
-    Returns:
-        df(Pandas dataframe)
-    '''
-    df = pd.read_csv(x)
-    add = df.columns.tolist()
-    df.loc[-1] = add 
-    df.index = df.index + 1  
-    df = df.sort_index()
-    df.columns = [x.replace(".csv","")]
-
-    return df
 
 
 def Ord_Herm_Pol_1(z, D, PF, zb):

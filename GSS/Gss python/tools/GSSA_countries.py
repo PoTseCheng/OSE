@@ -1019,15 +1019,13 @@ def GSSA_country_hd(N=2, D_max=1):
     # Choose the simulation length for the test on a stochastic simulation, T_test<=10,200
     T_test = 10200
     if N<=10:
-        real_path= os.path.join(os.getcwd(), "data\\")
         a20200 = scipy.io.loadmat(real_path+r"aT20200N10.mat").get("a20200")
-        a20200 = a20200[:T, :N]
+        a_test = a20200[T:T+T_test,:N]
     else:
         #construct productivity levels
         a20200 = Productivity(T_test,N,a,sigma,rho)
-
-    # Restrict the series of the productivity levels for the test
-    a_test = a20200[:T_test,:N]
+        # Restrict the series of the productivity levels for the test
+        a_test = a20200[:T_test,:N]
 
     # Choose an integration method for evaluating accuracy of solutions
     IM_test = 11
@@ -1063,17 +1061,41 @@ def GSSA_country_df(N=2, Cache=True):
     ------
     Argument:
         N(int): Number of countries. Default is 2
-        Cache(boolean): Cache the result or not. Default is True.
+        Cache(boolean): Use the cache results or not. Default is True.
     ------
     Output:
-        df(pandas DF): the result of 
+        df(pandas DF): The benchmarking result regarding different countries.
+    
+    ------
+    Notice:
+        Only 1,2,10,20,30,40,50,60,70,80,90,100 countries' results are cached.
     '''
+    real_path= os.path.join(os.getcwd(), "cache\\")
+
+    # Using the pre cache result instead
     if ((N==1)&(Cache==True)):
-        real_path= os.path.join(os.getcwd(), "cache\\")
         df = pd.read_csv(real_path+ r"countries_1.csv")
+
     elif ((N==2)&(Cache==True)):
-        real_path= os.path.join(os.getcwd(), "cache\\")
         df = pd.read_csv(real_path+ r"countries_2.csv")
+
+    elif ((N==10)&(Cache==True)):
+        df = pd.read_csv(real_path+ r"countries_10.csv")
+
+    elif ((N==20)&(Cache==True)):
+        df = pd.read_csv(real_path+ r"countries_20.csv")
+
+    elif ((N==30)&(Cache==True)):
+        df = pd.read_csv(real_path+ r"countries_30.csv")
+
+    elif ((N==40)&(Cache==True)):
+        df = pd.read_csv(real_path+ r"countries_40.csv")
+
+    elif ((N==50)&(Cache==True)):
+        df = pd.read_csv(real_path+ r"countries_50.csv")
+        
+    elif ((N==60)&(Cache==True)):
+        df = pd.read_csv(real_path+ r"countries_60.csv")
     
     elif N<=2:
         Time, stage1, Max, Mean, Test_time = GSSA_country(N=N)
@@ -1084,7 +1106,8 @@ def GSSA_country_df(N=2, Cache=True):
             "Total Time":[Time[i]+stage1+Test_time[i] for i in range(5)],
             "Number of countries":str(N)
             })
-    elif ((N>2)&(N<=10)):
+
+    elif ((N>2)&(N<10)):
         Time, stage1, Max, Mean, Test_time = GSSA_country_hd(N=N,D_max=2)
         # DF for the results
         df = pd.DataFrame({"Polynomial Degree":[i for i in range(1,3)],
