@@ -1097,6 +1097,18 @@ def GSSA_country_df(N=2, Cache=True):
     elif ((N==60)&(Cache==True)):
         df = pd.read_csv(real_path+ r"countries_60.csv")
     
+    elif ((N==70)&(Cache==True)):
+        df = pd.read_csv(real_path+ r"countries_70.csv")
+    
+    elif ((N==80)&(Cache==True)):
+        df = pd.read_csv(real_path+ r"countries_80.csv")
+
+    elif ((N==90)&(Cache==True)):
+        df = pd.read_csv(real_path+ r"countries_90.csv")
+    
+    elif ((N==100)&(Cache==True)):
+        df = pd.read_csv(real_path+ r"countries_100.csv")
+
     elif N<=2:
         Time, stage1, Max, Mean, Test_time = GSSA_country(N=N)
         # DF for the results
