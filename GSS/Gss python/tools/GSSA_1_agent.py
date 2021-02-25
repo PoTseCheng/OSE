@@ -530,16 +530,15 @@ def GSSA_poly(T, a, z, d, PF, zb, RM, penalty, normalize, dif_GSSA_D, kdamp, alp
     return bk_D
 
 
-def GSSA_ShowcaseResult():
+def GSSA_ShowcaseResult(IM=10):
     '''
     This function aims to simply showcase the python implementation of GSSA with respect to the authors original Matlab codes.
     ---------
-    Notice: All values are predetermined as the original matlab codes, also the comments closely follow the original
-    comments to ensure transparency of the translation.
-
+    Input:
+        IM(int):Integration Method. Default is 10.
     ----------
     Output:
-    showcase_result(Pandas Dataframe)
+        showcase_result(Pandas Dataframe)
     '''
     #Roadmap of GSSA:
     ############################################
@@ -616,7 +615,7 @@ def GSSA_ShowcaseResult():
     npol = np.array([3, 6, 10, 15, 21])
 
     # 13. Choose an integration method for computing solutions  
-    IM  = 10
+    IM  = IM
     n_nodes,epsi_nodes, weight_nodes= GH_Quadrature(IM, N=1, vcv=sigma**2)
 
     # make sure to change a into the right shape
@@ -664,7 +663,7 @@ def GSSA_ShowcaseResult():
         value = a_test[i-1]**(rho)*math.exp(float(epsi_test[i]))
         a_test.append(value)
 
-    IM_test = 10
+    IM_test = IM
     k_test = [ks]
 
     #construct containers for results

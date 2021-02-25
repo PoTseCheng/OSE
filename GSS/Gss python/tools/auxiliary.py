@@ -6,6 +6,36 @@ import os
 import scipy.io
 from tools.GSSA_countries import GSSA_country_df
 
+def show_values_on_bars(axs, h_v="v", space=0.4):
+    '''
+    A small function that shows the exact integral values of the barplots.
+    ------
+    Arguments:
+        axs(matplotlib.axes): Target subplot.
+        h_v(str): Whether the barplot is horizontal or vertical. Default is "v".
+        space(float): The space between the tex and the top edge of the bar.
+
+    '''
+    def _show_on_single_plot(ax):
+        if h_v == "v":
+            for p in ax.patches:
+                _x = p.get_x() + p.get_width() / 2
+                _y = p.get_y() + p.get_height()
+                value = int(p.get_height())
+                ax.text(_x, _y, value, ha="center") 
+        elif h_v == "h":
+            for p in ax.patches:
+                _x = p.get_x() + p.get_width() + float(space)
+                _y = p.get_y() + p.get_height()
+                value = int(p.get_width())
+                ax.text(_x, _y, value, ha="left")
+
+    if isinstance(axs, np.ndarray):
+        for idx, ax in np.ndenumerate(axs):
+            _show_on_single_plot(ax)
+    else:
+        _show_on_single_plot(axs)
+
 
 def Figure1():
     '''
@@ -145,9 +175,34 @@ def country_Figure1():
     fig.suptitle("Figure: Comparision between 1 and 2 countries", fontsize=16)
     plt.subplots_adjust(wspace=0.4)
     g = sns.barplot(x="Polynomial Degree", y="Total Time", hue="Number of countries", data=countries_12, palette="rocket_r", ax = ax0)
+    show_values_on_bars(ax0)
     g = sns.barplot(x="Polynomial Degree", y="Max Error", hue="Number of countries", data=countries_12, palette="rocket_r", ax = ax1)
     g.invert_yaxis()
     g = sns.barplot(x="Polynomial Degree", y="Mean Error", hue="Number of countries", data=countries_12, palette="rocket_r", ax = ax2)
+    g.invert_yaxis()
+    plt.show()
+    return
+
+def country_Figure2():
+    '''
+    Produce figure for 10 to 100 countries.
+    '''
+    df = GSSA_country_df(N=10, Cache=True)
+    for i in range(20,110,10):
+        df_temp = GSSA_country_df(N=i, Cache=True)
+        df = df.append(df_temp)
+    #plot
+    fig = plt.figure(figsize=(13, 5))
+    fig.suptitle("Figure: Comparision between 10 to 100 countries", fontsize=16)
+    plt.subplots_adjust(wspace=0.5)
+    ax1 = fig.add_subplot(1, 3, 1)
+    g = sns.barplot(x="Number of countries", y="Total Time", data=df, ax=ax1)
+    show_values_on_bars(ax1)
+    ax2 = fig.add_subplot(1, 3, 2)
+    g = sns.barplot(x="Number of countries", y="Max Error", data=df, ax=ax2)
+    g.invert_yaxis()
+    ax3 = fig.add_subplot(1, 3, 3)
+    g = sns.barplot(x="Number of countries", y="Mean Error", data=df, ax=ax3)
     g.invert_yaxis()
     plt.show()
     return
