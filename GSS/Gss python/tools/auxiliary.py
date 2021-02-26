@@ -5,6 +5,8 @@ import matplotlib.pyplot as plt
 import os
 import scipy.io
 from tools.GSSA_countries import GSSA_country_df
+from tools.GSSA_1_agent import GSSA_ShowcaseResult, Result_agent
+
 
 def show_values_on_bars(axs, h_v="v", space=0.4):
     '''
@@ -152,12 +154,111 @@ def Figure3(showcase_result):
     plt.xlabel("Polynomial Degree")
     plt.ylabel("Maximum Error($ln_{10}$)")
 
-    #build legend
+    # build legend
     labels = ["Polynomial Degree "+str(i) for i in range(1, 6)]
     handles = [plt.Rectangle((0, 0), 1,1, color=colors[i]) for i in range(5)]
     plt.legend(handles, labels, loc='center left', bbox_to_anchor=(1, 0.5), fancybox=True, shadow=True)
     plt.suptitle("Showcase results benchmarking", fontsize=16)
     plt.show()
+    return
+
+
+def Figure4():
+    '''
+    Showcase of inaccuracy of Monte-Carlo intergration method.
+    '''
+    # Change the IM in showcase
+    IM_MonteCarlo = GSSA_ShowcaseResult(IM=0)
+    IM_Q1 = GSSA_ShowcaseResult(IM=1)
+    IM_Q10 = GSSA_ShowcaseResult(IM=10)
+    # Data cleaning
+    IM_MonteCarlo['Integration Method'] = "Monte-Carlo Integration"
+    IM_Q1['Integration Method'] = "1-Node Gauss-Hermite Integration"
+    IM_Q10['Integration Method'] = "10-Node Gauss-Hermite Integration"
+    IM_final = pd.concat([IM_MonteCarlo, IM_Q1, IM_Q10])
+    # Plot
+    fig = plt.figure(figsize=(14, 5))
+    fig.suptitle("Figure: Comparision between different intergration methods", fontsize=16)
+    plt.subplots_adjust(wspace=0.5)
+    ax1 = fig.add_subplot(1, 3, 1)
+    g = sns.barplot(x="Polynomial Degree", y="Total Time", hue="Integration Method", data=IM_final, ax=ax1)
+    show_values_on_bars(ax1)
+    ax1.legend().remove()
+    ax2 = fig.add_subplot(1, 3, 2)
+    g = sns.barplot(x="Polynomial Degree", y="Mean Error", hue="Integration Method", data=IM_final, ax=ax2)
+    g.invert_yaxis()
+    g.set(ylabel="Mean Error($ln_{10}$)")
+    ax2.legend().remove()
+    ax3 = fig.add_subplot(1, 3, 3)
+    g = sns.barplot(x="Polynomial Degree", y="Maximum Error", hue="Integration Method", data=IM_final, ax=ax3)
+    g.set(ylabel="Maximum Error($ln_{10}$)")
+    g.invert_yaxis()
+    ax3.legend(loc='center left', bbox_to_anchor=(1, 0.5), fancybox=True, shadow=True)
+    plt.show()
+    return
+
+
+def LS_Figure():
+    '''
+    Plots the comparision between LS methods.
+    '''
+    # Get the results
+    result1, result2, result3 = Result_agent(cache=True)
+    fig, axes = plt.subplots(2, 3, figsize=(14, 10))
+    plt.subplots_adjust(wspace=0.5)
+    fig.suptitle("Figure: LS methods comparision", fontsize=16)
+
+    # Plotting
+    g = sns.barplot(x="Polynomial Degree", y="Total Time", hue="Method", data=result1, ax=axes[0, 0])
+    show_values_on_bars(axes[0, 0])
+    axes[0, 0].legend().remove()
+    g.set(ylabel="Total Time(sec)")
+    g = sns.barplot(x="Polynomial Degree", y="Mean Error", hue="Method", data=result1, ax=axes[0, 1])
+    g.invert_yaxis()
+    axes[0, 1].legend().remove()
+    g.set(ylabel="Mean Error($ln_{10}$)")
+    g = sns.barplot(x="Polynomial Degree", y="Max Error", hue="Method", data=result1, ax=axes[0, 2])
+    g.invert_yaxis()
+    axes[0, 2].legend(loc='center left', bbox_to_anchor=(1, 0.5), fancybox=True, shadow=True)
+    g.set(ylabel="Maximum Error($ln_{10}$)")
+    g = sns.barplot(x="Polynomial Degree", y="Total Time", hue="Method", data=result2, ax=axes[1, 0])
+    show_values_on_bars(axes[1, 0])
+    axes[1, 0].legend().remove()
+    g.set(ylabel="Total Time(sec)")
+    g = sns.barplot(x="Polynomial Degree", y="Mean Error", hue="Method", data=result2, ax=axes[1, 1])
+    g.invert_yaxis()
+    axes[1, 1].legend().remove()
+    g.set(ylabel="Mean Error($ln_{10}$)")
+    g = sns.barplot(x="Polynomial Degree", y="Max Error", hue="Method", data=result2, ax=axes[1, 2])
+    g.invert_yaxis()
+    g.set(ylabel="Maximum Error($ln_{10}$)")
+    axes[1, 2].legend(loc='center left', bbox_to_anchor=(1, 0.5), fancybox=True, shadow=True)
+    return
+
+
+def LAD_figure():
+    '''
+    Plots the comparision between LAD methods.
+    '''
+    result1, result2, result3 = Result_agent(cache=True)
+    fig = plt.figure(figsize=(14, 5))
+    fig.suptitle("Figure: LAD-PP methods comparision", fontsize=16)
+    plt.subplots_adjust(wspace=0.5)
+    ax1 = fig.add_subplot(1, 3, 1)
+    g = sns.barplot(x="Polynomial Degree", y="Total Time", hue="Method", data=result3, ax=ax1)
+    g.set(ylabel="Total Time(sec)")
+    show_values_on_bars(ax1)
+    ax1.legend().remove()
+    ax2 = fig.add_subplot(1, 3, 2)
+    g = sns.barplot(x="Polynomial Degree", y="Mean Error", hue="Method", data=result3, ax=ax2)
+    g.invert_yaxis()
+    g.set(ylabel="Mean Error($ln_{10}$)")
+    ax2.legend().remove()
+    ax3 = fig.add_subplot(1, 3, 3)
+    g = sns.barplot(x="Polynomial Degree", y="Max Error", hue="Method", data=result3, ax=ax3)
+    g.invert_yaxis()
+    g.set(ylabel="Maximum Error($ln_{10}$)")
+    ax3.legend(loc='center left', bbox_to_anchor=(1, 0.5), fancybox=True, shadow=True)
     return
 
 
@@ -171,38 +272,47 @@ def country_Figure1():
     # Make sure data in the correct type
     countries_12["Number of countries"] = countries_12["Number of countries"].astype(str)
     # Plotting
-    fig, (ax0, ax1, ax2) = plt.subplots (1, 3, figsize=(15, 5))
+    fig, (ax0, ax1, ax2) = plt.subplots(1, 3, figsize=(15, 5))
     fig.suptitle("Figure: Comparision between 1 and 2 countries", fontsize=16)
     plt.subplots_adjust(wspace=0.4)
     g = sns.barplot(x="Polynomial Degree", y="Total Time", hue="Number of countries", data=countries_12, palette="rocket_r", ax = ax0)
     show_values_on_bars(ax0)
-    g = sns.barplot(x="Polynomial Degree", y="Max Error", hue="Number of countries", data=countries_12, palette="rocket_r", ax = ax1)
+    ax0.legend().remove()
+    g = sns.barplot(x="Polynomial Degree", y="Mean Error", hue="Number of countries", data=countries_12, palette="rocket_r", ax = ax1)
     g.invert_yaxis()
-    g = sns.barplot(x="Polynomial Degree", y="Mean Error", hue="Number of countries", data=countries_12, palette="rocket_r", ax = ax2)
+    g.set(ylabel="Mean Error($ln_{10}$)")
+    ax1.legend().remove()
+    g = sns.barplot(x="Polynomial Degree", y="Max Error", hue="Number of countries", data=countries_12, palette="rocket_r", ax = ax2)
     g.invert_yaxis()
+    g.set(ylabel="Maximum Error($ln_{10}$)")
+    ax2.legend(loc='center left', title="Number of Countries", bbox_to_anchor=(1, 0.5), fancybox=True, shadow=True)
     plt.show()
     return
+
 
 def country_Figure2():
     '''
     Produce figure for 10 to 100 countries.
     '''
     df = GSSA_country_df(N=10, Cache=True)
-    for i in range(20,110,10):
+    for i in range(20, 110, 10):
         df_temp = GSSA_country_df(N=i, Cache=True)
         df = df.append(df_temp)
-    #plot
-    fig = plt.figure(figsize=(13, 5))
+    # plot
+    fig = plt.figure(figsize=(14, 5))
     fig.suptitle("Figure: Comparision between 10 to 100 countries", fontsize=16)
     plt.subplots_adjust(wspace=0.5)
     ax1 = fig.add_subplot(1, 3, 1)
     g = sns.barplot(x="Number of countries", y="Total Time", data=df, ax=ax1)
     show_values_on_bars(ax1)
+    g.set(xlabel="Number of Countries", ylabel="Total Time (sec)")
     ax2 = fig.add_subplot(1, 3, 2)
-    g = sns.barplot(x="Number of countries", y="Max Error", data=df, ax=ax2)
+    g = sns.barplot(x="Number of countries", y="Mean Error", data=df, ax=ax2)
     g.invert_yaxis()
+    g.set(xlabel="Number of Countries", ylabel="Mean Error($ln_{10}$)")
     ax3 = fig.add_subplot(1, 3, 3)
-    g = sns.barplot(x="Number of countries", y="Mean Error", data=df, ax=ax3)
+    g = sns.barplot(x="Number of countries", y="Max Error", data=df, ax=ax3)
     g.invert_yaxis()
+    g.set(xlabel="Number of Countries", ylabel="Maximum Error($ln_{10}$)")
     plt.show()
     return
