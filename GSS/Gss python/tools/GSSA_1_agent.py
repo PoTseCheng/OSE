@@ -552,7 +552,7 @@ def GSSA_ShowcaseResult(IM=10):
     # Initialisation
     ################
 
-    #We wont be simulating any data, we will use the data provided to ensure the result
+    #we will use the data provided to ensure the result
     real_path= os.path.join(os.getcwd(), "data\\")
     epsi_pre = scipy.io.loadmat(real_path+r"epsi10000.mat").get("epsi10000")
     df = pd.DataFrame(epsi_pre)
@@ -652,9 +652,7 @@ def GSSA_ShowcaseResult(IM=10):
     ###################################   
     # Stage 2 of GSSA
     ###################################
-
-    # we also will also just use the given data the authors generated
-    # Notice for the real simulation we can differ from here by using rang
+ 
     T_test = 10200
     epsi_t = scipy.io.loadmat(real_path+r"epsi_test.mat").get("epsi_test")
     epsi_test = sigma*epsi_t
@@ -802,7 +800,7 @@ def GSSA_1_agent(T=3000, T_test=10000, D_max=5, IM=10, RM=6 ,normalize=1, penalt
     #Accuracy testing
     ########################
     T_test = 10000
-    np.random.seed(123)
+    np.random.seed(100)
     df_prep = randn2(T_test)
     df = pd.DataFrame(df_prep)
     epsi_test = sigma*df.to_numpy().astype(float)
@@ -822,7 +820,7 @@ def GSSA_1_agent(T=3000, T_test=10000, D_max=5, IM=10, RM=6 ,normalize=1, penalt
             value = float(np.matmul(X_test, BK[d-1]))
             k_test.append(value)
         
-        #The T_test - discard needs to match the exact numbers of simulations
+        
         discard = T_test-T
         mean_error, max_error, error_time = Accuracy_Test_1(sigma,rho,beta,gam,alpha,delta,k_test,a_test,BK[d-1],d,IM_test,PF,zb,discard)
         result_max.append(max_error)
@@ -878,13 +876,14 @@ def Result_agent(cache=True):
 
         # IM = one node MC only
         # RM = RLS-Tikhonov
-        # Smaller regulation k = -7
+        # Smaller regulation k = -6
         max_5_0, mean_5_0, error_time_5_0, Time_5_0, stage1_time_5_0 = GSSA_1_agent(D_max=5, IM=5, RM=6 ,normalize=1, penalty=-6, PF=0)
+      
 
         # IM = one node MC only
         # RM = RLS-Tikhonov
         # Larger regulation k = -4
-        max_5_1, mean_5_1, error_time_5_1, Time_5_1, stage1_time_5_1 = GSSA_1_agent(D_max=5, IM=0, RM=6 ,normalize=1, penalty=-3, PF=0)
+        max_5_1, mean_5_1, error_time_5_1, Time_5_1, stage1_time_5_1 = GSSA_1_agent(D_max=5, IM=0, RM=6 ,normalize=1, penalty=-4, PF=0)
 
         #Dataframe result1
         df_0 = pd.DataFrame({"Polynomial Degree":[i for i in range(1,6)],
@@ -956,13 +955,9 @@ def Result_agent(cache=True):
 
         # IM = one node MC only
         # RM = RLS-TSVD
-        # Larger regulation k = 6
-        max_6_1, mean_6_1, error_time_6_1, Time_6_1, stage1_time_6_1 = GSSA_1_agent(D_max=5, IM=0, RM=6 ,normalize=1, penalty=6, PF=0)
+        # Larger regulation k = 5
+        max_6_1, mean_6_1, error_time_6_1, Time_6_1, stage1_time_6_1 = GSSA_1_agent(D_max=5, IM=0, RM=6 ,normalize=1, penalty=5, PF=0)
 
-        # IM = one node MC only
-        # RM = RLS-TSVD
-        # Hermite
-        max_6_2, mean_6_2, error_time_6_2, Time_6_2, stage1_time_6_2 = GSSA_1_agent(D_max=5, IM=0, RM=6,normalize=1, penalty=7, PF=1)
 
         #Dataframe result2
         df_0 = pd.DataFrame({"Polynomial Degree":[i for i in range(1,6)],
@@ -990,7 +985,7 @@ def Result_agent(cache=True):
         "Mean Error":mean_6_0,
         "Max Error":max_6_0,
         "Total Time":[Time_6_0[i]+stage1_time_6_0+error_time_6_0 for i in range(5)],
-        "Method": "Smaller Regulation RLS"
+        "Method": "Smaller Regulation RLS-TSVD"
         })
 
         df_4 = pd.DataFrame({"Polynomial Degree":[i for i in range(1,6)],

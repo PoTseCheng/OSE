@@ -38,7 +38,7 @@ clear all;
 
 % 1. Choose the simulation length 
 % ------------------------------- 
-T     = 10000;   % Choose the simulation length for the solution procedure,
+T     = 3000;   % Choose the simulation length for the solution procedure,
                  % T<=10,000                    
                  
 % To solve models with T>10,000, one needs to simulate new series of the 
@@ -190,7 +190,7 @@ BK = zeros(npol(D_max),D_max); % Matrix of polynomial coefficients of the
                  
 % 13. Choose an integration method for computing solutions  
 % -------------------------------------------------------- 
-IM  = 10;        % 0=a one-node Monte Carlo method (default);
+IM  = 0;        % 0=a one-node Monte Carlo method (default);
                  % 1,2,..,10=Gauss-Hermite quadrature rules with 1,2,...,10 
                  % nodes, respectively
 [n_nodes,epsi_nodes,weight_nodes] = GH_Quadrature(IM,1,sigma^2);
@@ -206,12 +206,12 @@ a1 = a(1:T,:).^rho*exp(epsi_nodes');
                  
 % 14. Choose a regression specification 
 % ------------------------------------ 
-RM    = 6;       % Choose a regression method: 
+RM    = 5;       % Choose a regression method: 
                  % 1=OLS,          2=LS-SVD,   3=LAD-PP,  4=LAD-DP, 
                  % 5=RLS-Tikhonov, 6=RLS-TSVD, 7=RLAD-PP, 8=RLAD-DP
 normalize = 1;   % Option of normalizing the data; 0=unnormalized data; 
                  % 1=normalized data                    
-penalty = 7;     % Degree of regularization for a regularization methods, 
+penalty = -10;     % Degree of regularization for a regularization methods, 
                  % RM=5,6,7,8 (must be negative, e.g., -7 for RM=5,7,8 
                  % and must be positive, e.g., 7, for RM=6)
 PF = 0;          % Choose a polynomial family; 0=Ordinary (default);  
@@ -365,7 +365,7 @@ end
  
    % 17.2 Choose an integration method for evaluating accuracy of solutions
    %-----------------------------------------------------------------------
-   IM_test = 10;                  % See paragraph 13 for the integration 
+   IM_test = 0;                  % See paragraph 13 for the integration 
                                   % options
 
    % To implement the test on a stochastic simulation with T_test>10,200, one

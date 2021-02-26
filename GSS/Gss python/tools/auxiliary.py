@@ -198,12 +198,17 @@ def Figure4():
     return
 
 
-def LS_Figure():
+def LS_Figure(x, y):
     '''
     Plots the comparision between LS methods.
+    -----
+    Arguments:
+        x(pandas Dataframe): Result1 from the function Result_agent().
+        y(pandas Dataframe): Result2 from the function Result_agent().
     '''
     # Get the results
-    result1, result2, result3 = Result_agent(cache=True)
+    result1 = x
+    result2 = y
     fig, axes = plt.subplots(2, 3, figsize=(14, 10))
     plt.subplots_adjust(wspace=0.5)
     fig.suptitle("Figure: LS methods comparision", fontsize=16)
@@ -236,11 +241,14 @@ def LS_Figure():
     return
 
 
-def LAD_figure():
+def LAD_figure(x):
     '''
     Plots the comparision between LAD methods.
+    -----
+    Arguments:
+        x(pandas Dataframe): Result3 from the function Result_agent().
     '''
-    result1, result2, result3 = Result_agent(cache=True)
+    result3 = x
     fig = plt.figure(figsize=(14, 5))
     fig.suptitle("Figure: LAD-PP methods comparision", fontsize=16)
     plt.subplots_adjust(wspace=0.5)
@@ -299,7 +307,7 @@ def country_Figure2():
         df_temp = GSSA_country_df(N=i, Cache=True)
         df = df.append(df_temp)
     # plot
-    fig = plt.figure(figsize=(14, 5))
+    fig = plt.figure(figsize=(15, 5))
     fig.suptitle("Figure: Comparision between 10 to 100 countries", fontsize=16)
     plt.subplots_adjust(wspace=0.5)
     ax1 = fig.add_subplot(1, 3, 1)
