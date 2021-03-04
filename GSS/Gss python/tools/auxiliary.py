@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 import os
 import scipy.io
 from tools.GSSA_countries import GSSA_country_df
-from tools.GSSA_1_agent import GSSA_ShowcaseResult, Result_agent
+from tools.GSSA_1_agent import GSSA_ShowcaseResult
 
 
 def show_values_on_bars(axs, h_v="v", space=0.4):
@@ -62,7 +62,7 @@ def Figure1():
     return
 
 
-def Figure2():
+def Figure3():
     '''
     This function showcase the normal polynominal degree vs hermite ones
     '''
@@ -125,7 +125,7 @@ def Figure2():
     return
 
 
-def Figure3(showcase_result):
+def Figure2(showcase_result):
     '''
     Benchmarking results for showcase GSSA
     ------
@@ -147,12 +147,12 @@ def Figure3(showcase_result):
     plt.bar("Polynomial Degree", "Mean Error", data=showcase_result, color=colors)
     plt.gca().invert_yaxis()
     plt.xlabel("Polynomial Degree")
-    plt.ylabel("Mean Error($ln_{10}$)")
+    plt.ylabel("Mean Error($\log_{10}$)")
     ax = fig.add_subplot(1, 3, 3)
     plt.bar("Polynomial Degree", "Maximum Error", data=showcase_result, color=colors)
     plt.gca().invert_yaxis()
     plt.xlabel("Polynomial Degree")
-    plt.ylabel("Maximum Error($ln_{10}$)")
+    plt.ylabel("Maximum Error($\log_{10}$)")
 
     # build legend
     labels = ["Polynomial Degree "+str(i) for i in range(1, 6)]
@@ -187,11 +187,11 @@ def Figure4():
     ax2 = fig.add_subplot(1, 3, 2)
     g = sns.barplot(x="Polynomial Degree", y="Mean Error", hue="Integration Method", data=IM_final, ax=ax2)
     g.invert_yaxis()
-    g.set(ylabel="Mean Error($ln_{10}$)")
+    g.set(ylabel="Mean Error($\log_{10}$)")
     ax2.legend().remove()
     ax3 = fig.add_subplot(1, 3, 3)
     g = sns.barplot(x="Polynomial Degree", y="Maximum Error", hue="Integration Method", data=IM_final, ax=ax3)
-    g.set(ylabel="Maximum Error($ln_{10}$)")
+    g.set(ylabel="Maximum Error($\log_{10}$)")
     g.invert_yaxis()
     ax3.legend(loc='center left', bbox_to_anchor=(1, 0.5), fancybox=True, shadow=True)
     plt.show()
@@ -221,11 +221,11 @@ def LS_Figure(x, y):
     g = sns.barplot(x="Polynomial Degree", y="Mean Error", hue="Method", data=result1, ax=axes[0, 1])
     g.invert_yaxis()
     axes[0, 1].legend().remove()
-    g.set(ylabel="Mean Error($ln_{10}$)")
+    g.set(ylabel="Mean Error($\log_{10}$)")
     g = sns.barplot(x="Polynomial Degree", y="Max Error", hue="Method", data=result1, ax=axes[0, 2])
     g.invert_yaxis()
     axes[0, 2].legend(loc='center left', bbox_to_anchor=(1, 0.5), fancybox=True, shadow=True)
-    g.set(ylabel="Maximum Error($ln_{10}$)")
+    g.set(ylabel="Maximum Error($\log_{10}$)")
     g = sns.barplot(x="Polynomial Degree", y="Total Time", hue="Method", data=result2, ax=axes[1, 0])
     show_values_on_bars(axes[1, 0])
     axes[1, 0].legend().remove()
@@ -233,10 +233,10 @@ def LS_Figure(x, y):
     g = sns.barplot(x="Polynomial Degree", y="Mean Error", hue="Method", data=result2, ax=axes[1, 1])
     g.invert_yaxis()
     axes[1, 1].legend().remove()
-    g.set(ylabel="Mean Error($ln_{10}$)")
+    g.set(ylabel="Mean Error($\log_{10}$)")
     g = sns.barplot(x="Polynomial Degree", y="Max Error", hue="Method", data=result2, ax=axes[1, 2])
     g.invert_yaxis()
-    g.set(ylabel="Maximum Error($ln_{10}$)")
+    g.set(ylabel="Maximum Error($\log_{10}$)")
     axes[1, 2].legend(loc='center left', bbox_to_anchor=(1, 0.5), fancybox=True, shadow=True)
     return
 
@@ -260,12 +260,12 @@ def LAD_figure(x):
     ax2 = fig.add_subplot(1, 3, 2)
     g = sns.barplot(x="Polynomial Degree", y="Mean Error", hue="Method", data=result3, ax=ax2)
     g.invert_yaxis()
-    g.set(ylabel="Mean Error($ln_{10}$)")
+    g.set(ylabel="Mean Error($\log_{10}$)")
     ax2.legend().remove()
     ax3 = fig.add_subplot(1, 3, 3)
     g = sns.barplot(x="Polynomial Degree", y="Max Error", hue="Method", data=result3, ax=ax3)
     g.invert_yaxis()
-    g.set(ylabel="Maximum Error($ln_{10}$)")
+    g.set(ylabel="Maximum Error($\log_{10}$)")
     ax3.legend(loc='center left', bbox_to_anchor=(1, 0.5), fancybox=True, shadow=True)
     return
 
@@ -288,11 +288,11 @@ def country_Figure1():
     ax0.legend().remove()
     g = sns.barplot(x="Polynomial Degree", y="Mean Error", hue="Number of countries", data=countries_12, palette="rocket_r", ax = ax1)
     g.invert_yaxis()
-    g.set(ylabel="Mean Error($ln_{10}$)")
+    g.set(ylabel="Mean Error($\log_{10}$)")
     ax1.legend().remove()
     g = sns.barplot(x="Polynomial Degree", y="Max Error", hue="Number of countries", data=countries_12, palette="rocket_r", ax = ax2)
     g.invert_yaxis()
-    g.set(ylabel="Maximum Error($ln_{10}$)")
+    g.set(ylabel="Maximum Error($\log_{10}$)")
     ax2.legend(loc='center left', title="Number of Countries", bbox_to_anchor=(1, 0.5), fancybox=True, shadow=True)
     plt.show()
     return
@@ -317,10 +317,10 @@ def country_Figure2():
     ax2 = fig.add_subplot(1, 3, 2)
     g = sns.barplot(x="Number of countries", y="Mean Error", data=df, ax=ax2)
     g.invert_yaxis()
-    g.set(xlabel="Number of Countries", ylabel="Mean Error($ln_{10}$)")
+    g.set(xlabel="Number of Countries", ylabel="Mean Error($\log_{10}$)")
     ax3 = fig.add_subplot(1, 3, 3)
     g = sns.barplot(x="Number of countries", y="Max Error", data=df, ax=ax3)
     g.invert_yaxis()
-    g.set(xlabel="Number of Countries", ylabel="Maximum Error($ln_{10}$)")
+    g.set(xlabel="Number of Countries", ylabel="Maximum Error($\log_{10}$)")
     plt.show()
     return
