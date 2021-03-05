@@ -238,8 +238,14 @@ def Num_Stab_Approx(x, y, RM, penalty,normalised):
         beq = np.asarray([0]*n1)
         result = linprog(f, A_eq=Aeq, b_eq=beq, bounds=BND, method="highs-ipm")
         B.append(result.x[0:n1])
-    # Despite we can get an answer from Scipy, this is not the answer we want, 
-    # as we want the lagrange multiplier for coefficient
+    # Despite we can get an answer from Scipy, this is not the answer we want. 
+    # What we want is the lagrange multiplier for coefficient. I have already tried the Pulp package,
+    # but given the size of the matrix, it does not worth to loop over the matrix then individually add
+    # each equation to the solver. I have also try to use the answer to revert the lagrange multiplier,
+    # but find myself without success due to not knowing lambda for the lower and upper bound.  
+    # (see https://uk.mathworks.com/help/optim/ug/linprog.html#buusznx-lambda)
+    # Of course, I can also try to take the partial derivative, but this is impossible as there are almost 10 thousand
+    # unknown variables.
     
     # RLS-Tikhonov
     elif RM == 5:
@@ -254,7 +260,7 @@ def Num_Stab_Approx(x, y, RM, penalty,normalised):
         Sr_inv[0:r, 0:r] = np.diag(np.divide(1., S[:r]))
         B = V@Sr_inv@U.conj().T@Y1
 
-    # LADPP
+    # RLAD-PP
     elif RM == 7:
         # we can just use the default setting from scipy as the lower and upper will be the same
         f = np.vstack((10**penalty*np.ones((n1*2, 1))*T/n1, np.ones((2*T, 1))))
@@ -267,7 +273,7 @@ def Num_Stab_Approx(x, y, RM, penalty,normalised):
             B.append(list(result.x[0:n1]-result.x[n1:2*n1]))
         B = np.asarray(B).T
 
-    # RM == 8 is unavaliable(see notebook)
+    # RM == 8 is unavaliable as it is an addition to LAD-DP
 
     # Step 4: Infer the regression coefficients in the original regression with unnormalised data
     # -----------------------------------------------------------------------------------------
