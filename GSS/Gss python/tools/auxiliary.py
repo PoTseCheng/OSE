@@ -50,13 +50,13 @@ def Figure1():
     df1 = pd.DataFrame(prep1)
     df2 = pd.DataFrame(prep2)
     # cleaning data
-    df1 = df1.iloc[:2000,:1]
+    df1 = df1.iloc[:2000, :1]
     df2 = df2.iloc[:, :1]
     df2 = df2.head(2000)
     result = pd.concat([df1[0], df2[0]], axis=1)
     result.columns = ["Capital", "Productivity"]
     # ploting
-    Fig1 = sns.jointplot("Capital", "Productivity",data=result, kind='hex')
+    Fig1 = sns.jointplot("Capital", "Productivity", data=result, kind='hex')
     Fig1.fig.suptitle("Ergodic set with closed-formed solution", fontsize=16)
     Fig1.fig.subplots_adjust(top=0.95)
     return
@@ -158,7 +158,7 @@ def Figure2(showcase_result):
     labels = ["Polynomial Degree "+str(i) for i in range(1, 6)]
     handles = [plt.Rectangle((0, 0), 1,1, color=colors[i]) for i in range(5)]
     plt.legend(handles, labels, loc='center left', bbox_to_anchor=(1, 0.5), fancybox=True, shadow=True)
-    plt.suptitle("Showcase results benchmarking", fontsize=16)
+    plt.suptitle("GSSA Showcase Benchmark", fontsize=16)
     plt.show()
     return
 
@@ -200,7 +200,7 @@ def Figure4():
 
 def LS_Figure(x, y):
     '''
-    Plots the comparision between LS methods.
+    Plots the comparison between LS methods.
     -----
     Arguments:
         x(pandas Dataframe): Result1 from the function Result_agent().
@@ -209,9 +209,13 @@ def LS_Figure(x, y):
     # Get the results
     result1 = x
     result2 = y
+    # Some cleaning
+    result1.iloc[2:5,3]=0
+    result1.iloc[8:10,3]=0
+    # Preparation for plotting
     fig, axes = plt.subplots(2, 3, figsize=(14, 10))
     plt.subplots_adjust(wspace=0.5)
-    fig.suptitle("Figure: LS methods comparision", fontsize=16)
+    fig.suptitle("Figure: LS Methods Comparison", fontsize=16)
 
     # Plotting
     g = sns.barplot(x="Polynomial Degree", y="Total Time", hue="Method", data=result1, ax=axes[0, 0])
@@ -243,14 +247,19 @@ def LS_Figure(x, y):
 
 def LAD_figure(x):
     '''
-    Plots the comparision between LAD methods.
+    Plots the comparison between LAD methods.
     -----
     Arguments:
         x(pandas Dataframe): Result3 from the function Result_agent().
     '''
     result3 = x
+    # Data minor cleaning
+    result3.iloc[4, 3] = 0
+    result3.iloc[9, 3] = 0
+
+    # Plot
     fig = plt.figure(figsize=(14, 5))
-    fig.suptitle("Figure: LAD-PP methods comparision", fontsize=16)
+    fig.suptitle("Figure: LAD-PP Methods Comparison", fontsize=16)
     plt.subplots_adjust(wspace=0.5)
     ax1 = fig.add_subplot(1, 3, 1)
     g = sns.barplot(x="Polynomial Degree", y="Total Time", hue="Method", data=result3, ax=ax1)
@@ -281,7 +290,7 @@ def country_Figure1():
     countries_12["Number of countries"] = countries_12["Number of countries"].astype(str)
     # Plotting
     fig, (ax0, ax1, ax2) = plt.subplots(1, 3, figsize=(15, 5))
-    fig.suptitle("Figure: Comparision between 1 and 2 countries", fontsize=16)
+    fig.suptitle("Figure: Comparison between 1 and 2 countries", fontsize=16)
     plt.subplots_adjust(wspace=0.4)
     g = sns.barplot(x="Polynomial Degree", y="Total Time", hue="Number of countries", data=countries_12, palette="rocket_r", ax = ax0)
     show_values_on_bars(ax0)
@@ -308,7 +317,7 @@ def country_Figure2():
         df = df.append(df_temp)
     # plot
     fig = plt.figure(figsize=(15, 5))
-    fig.suptitle("Figure: Comparision between 10 to 100 countries", fontsize=16)
+    fig.suptitle("Figure: Comparison between 10 to 100 countries", fontsize=16)
     plt.subplots_adjust(wspace=0.5)
     ax1 = fig.add_subplot(1, 3, 1)
     g = sns.barplot(x="Number of countries", y="Total Time", data=df, ax=ax1)
