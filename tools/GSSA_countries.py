@@ -10,6 +10,7 @@ import time
 import pandas as pd
 import os
 
+
 def randn2(*args,**kwargs):
     '''
     The randn function that matlab uses.
@@ -557,7 +558,7 @@ def GSSA_country(N=2):
     #4: GSSA stage 2
 
     #################################
-    #Simulation
+    # Simulation
     #################################
 
     # User defined parameters

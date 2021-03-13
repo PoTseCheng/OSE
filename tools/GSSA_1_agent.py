@@ -365,13 +365,29 @@ def GH_Quadrature(Qn, N, vcv):
 
 def Accuracy_Test_1(sigma,rho,beta,gam,alpha,delta,k,a,bk,D,IM,PF,zb,discard):
     '''
-    This is the main function for GSSA stage 2, which measures the error.
-    ------
+    This function is used for evaluating accuracy of solutions to representitive agent model: it computes approximation errors in 
+    the optimality conditions on a given set of points in the state space.
+    --------
     Arguments:
-        todo
-    ----
-    Outputs:
-        todo
+        sigma(float): Standard deviation of shocks to the log of the productivity level 
+        rho(float): Persistence of the log of the productivity level.
+        beta(float): Discount factor.
+        gam(float): Utility-function parameter.
+        alpha(float): Capital share in output.
+        delta(float): Depreciation rate.
+        k(numpy array): Current-period capital.
+        a(numpy array): Current productivity levels.
+        bk(numpy array): Coefficients of the capital policy function.
+        D(int): Degree of polynomial.
+        IM(int): Integration methods. 0 to 10.  
+        PF(binary): Polynomial family, 0=Ordinary, 1=Hermite.
+        zb(2D numpy array): A matrix of means and standard deviations of the state variables.
+        discard(int): The number of data points to discard.
+    --------
+    Output:
+        Errors_mean(float): The mean approximation errors.
+        Errors_max(float): The maximum approximation errors.
+        time_test(float): The time to run the test.
     '''
     start = time.time()
     n_nodes,epsi_nodes, weight_nodes = GH_Quadrature(Qn=IM, N=1, vcv=sigma**2)
@@ -638,7 +654,7 @@ def GSSA_ShowcaseResult(IM=10):
     # 1=normalized data        
     normalize = 1 
     # Degree of regularization for a regularization methods, 
-    # RM=5,6,7,8 (must be negative, e.g., -7 for RM=5,7,8 
+    # RM=5,6,7 (must be negative, e.g., -7 for RM=5,7 
     # and must be positive, e.g., 7, for RM=6)                     
     penalty = 7     
     # Choose a polynomial family; 0=Ordinary (default); # 1=Hermite 
@@ -708,24 +724,10 @@ def GSSA_1_agent(T=3000, T_test=10000, D_max=5, IM=10, RM=6 ,normalize=1, penalt
     '''
     This is a modified version of the showcase code, notice that the total simulations are unified to 3000.
     --------
-    Arguments:
-        T(int): Number of simulations. Default is 3000.
-        T_test(int): Default is 10000
-        D_max(int): Default is 5.
-        IM(int): Default is 10.
-        RM(int): Default is 6.
-        normalize(binary): Default is 1.
-        penalty(int): Default is 7.
-        PF(binary):  Default is 0.
+    Notice:
+        The main difference between this function vs showcase function is that this function solely relies on simulations and not
+        deterministic data sets.
 
-    -----------
-    Output:
-        result_max(list):
-        result_mean(list):
-        error_time(list):
-        BK(list): 
-        Time(list):
-        stage1_time(float): 
     '''
 
     #################
