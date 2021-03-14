@@ -12,7 +12,7 @@ Please use the following badges to view my notebook:
   src="https://raw.githubusercontent.com/jupyter/design/master/logos/Badges/nbviewer_badge.png"
       width="109" height="20">
 </a>
-<a href="https://mybinder.org/v2/gh/HumanCapitalAnalysis/microeconometrics-course-project-PoTseCheng.git/master?filepath=Final_project.ipynb"
+<a href="https://mybinder.org/v2/gh/PoTseCheng/OSE.git/HEAD?filepath=OSE%20final%20report.ipynb"
     target="_parent">
     <img align="center"
        src="https://mybinder.org/badge_logo.svg"
