@@ -1,0 +1,17 @@
+name: OSE_project
+
+channels:
+- defaults
+- conda-forge
+
+dependencies:
+- python=3.7.7
+- numpy
+- pandas
+- jupyterlab
+- matplotlib
+- seaborn
+- scipy
+- pip
+
+  
