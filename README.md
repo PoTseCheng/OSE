@@ -1,8 +1,8 @@
 ## OSE Project by Po-Tse Cheng
 
-This project implemented the Generalised Stochastic Simulation Algorithm (GSSA) by [Kenneth L. Judd](https://kenjudd.org/), [Lilia Maliar](https://lmaliar.ws.gc.cuny.edu/), and [Serguei Maliar](https://web.stanford.edu/~maliars/). 
+This project implemented the Generalised Stochastic Simulation Algorithm (GSSA) by [Kenneth L. Judd](https://kenjudd.org/), [Lilia Maliar](https://lmaliar.ws.gc.cuny.edu/), and [Serguei Maliar](https://web.stanford.edu/~maliars/). The original paper: Numerically stable and accurate stochastic simulation approaches for solving dynamic economic models can be found [here](https://onlinelibrary.wiley.com/doi/pdf/10.3982/QE14), while the code of the original GSSA can be found [here](https://web.stanford.edu/~maliars/Files/LowerErrorBounds_ECMA_JMM_2016.zip).
 
-(summary here)
+This project translate the entire Matlab code from the original authors to Python code. More importantly, I highlight how GSSA overcomes the two major issues that plague normal stochastic simulation methods: (1) Numerical instability in higher polynomials, and (2) No accuracy improvement in higher polynomials. GSSA conquers the former by using regression methods that can deal with ill-conditioned data, while increase the accuracy by incorporating other integration method. Each method is thoroughly examined and the codes are well-documented. I also include the extension from the author, which solves a multi-country model using GSSA. The results are amazingly accurate. Overall, GSSA is a good choice for solving stochastic economic models.
 
 Please use the following badges to view my notebook:
 
@@ -18,6 +18,8 @@ Please use the following badges to view my notebook:
        src="https://mybinder.org/badge_logo.svg"
        width="109" height="20">
 </a>
+
+Side note: The environment I am using can be found in the environment.yml in this repository. 
 
 
 ---
